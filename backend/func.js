@@ -17,7 +17,30 @@ WAVGEN={
 		}
 		return window.btoa( binary );
 	},
-	
+	generateSingleScore:function(freq,samplecnt){
+		var pack=function(p){
+			var plateau_start=0.1;
+			var plateau_end=0.7;
+			if(p<plateau_start){
+				//0..start
+				return 0.5-0.5*Math.cos(Math.PI*(p/plateau_start));
+			}
+			else if(p>plateau_end){
+				return 0.5-0.5*Math.cos(Math.PI*( (1-p)/(1-plateau_end)  ));
+			}
+			else return 1.0;
+		}
+		
+		var thisWave=new ArrayBuffer(2*samplecnt);
+		var dv=new DataView(thisWave,0);
+		for(i=0;i<samplecnt;i++)
+		{
+			var sample=pack(i/samplecnt)*this.amplitude*
+			Math.sin((i/this.sampleps)*(2*Math.PI*freq));
+			dv.setInt16(i*2,Math.floor(sample),1);
+		}
+		return thisWave;
+	},
 	saveSingleScore:function(frnum,second){
 		second=second||1;
 		var hz=this.frnum2hz(frnum);
@@ -34,11 +57,14 @@ WAVGEN={
 		headdv.setUint32(4,contentlength+36,true);
 		
 		var contentdv=new DataView(file,44);
+		var wavebuffer=this.generateSingleScore(hz,samplecnt);
+		var wavedv=new DataView(wavebuffer);
 		for(i=0;i<samplecnt;i++)
 		{
-			var sample=this.amplitude*
-			Math.sin((i/this.sampleps)*(2*Math.PI*hz));
-			contentdv.setInt16(i*2,Math.floor(sample),1);
+			contentdv.setInt16(i*2,
+				 contentdv.getInt16(i*2,1)+
+				 wavedv.getInt16(i*2,1)
+			,1);
 		}
 		
 		var b64file=this._arrayBufferToBase64(file);
