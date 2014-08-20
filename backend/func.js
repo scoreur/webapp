@@ -42,7 +42,9 @@ WAVGEN={
 		}
 		
 		var b64file=this._arrayBufferToBase64(file);
-		
+		delete headdv;
+		delete contentdv;
+		delete file;
 		return "data:audio/wav;base64,"+b64file;
 	
 	},
