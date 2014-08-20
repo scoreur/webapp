@@ -2,10 +2,11 @@ LINER={
 	lines:[],
 	settings:{
 		lineheight:12,
-		scorewidth:16,
+		scorewidth:22,
+		scoresize:16,
 		beatsperseq:4,
 		seqperline:12,
-		top_line:7.5,
+		top_line:8,
 		initial_padding:100,
 	},
 	/*
@@ -70,17 +71,17 @@ LINER={
 		}
 		
 		elem.newnote=function(duration){
-			//draw it! image resources!
-			//dummy fill:
-			var c=new SVG.Color();
-			c.b=255;
-			c.g=255*(10-duration)/10;
-			c.r=255*(duration)/10;
-			
-			var note=elem.svg.circle(LINER.settings.scorewidth*0.8);
-			note.scoredata={duration:duration, cx:0,cy:0};
-			note.fill(c);
-			return note;
+			var src;
+			switch(duration){
+				case 1:src='./resources/staff/quarternote.png';break;
+				case 2:
+				case 3:src='./resources/staff/halfnote.png';break;
+				case 4:src='./resources/staff/fullnote.png';break;
+			}
+			var img=elem.svg.image(src);
+			img.size(LINER.settings.scoresize,LINER.settings.scoresize);
+			img.scoredata={duration:duration,cx:0,cy:0};
+			return img;
 		}
 		elem.scores=[];//{time,duration,frnum,svgelem}
 		elem.liner={
@@ -115,5 +116,5 @@ LINER={
 		return elem.liner;
 	}
 }
-//todo: score database
-//todo: draw line, place note, score-to-note relation
+//todo: drag the note
+//todo: draw addition up/down line, draw note tail
