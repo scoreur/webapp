@@ -17,7 +17,7 @@ WAVGEN={
 		}
 		return window.btoa( binary );
 	},
-	generateSingleScore:function(freq,samplecnt){
+	generateSingleScore:function(amplitude,freq,samplecnt){
 		var pack=function(p){
 			var plateau_start=0.1;
 			var plateau_end=0.7;
@@ -35,7 +35,7 @@ WAVGEN={
 		var dv=new DataView(thisWave,0);
 		for(i=0;i<samplecnt;i++)
 		{
-			var sample=pack(i/samplecnt)*this.amplitude*
+			var sample=pack(i/samplecnt)*amplitude*
 			Math.sin((i/this.sampleps)*(2*Math.PI*freq));
 			dv.setInt16(i*2,Math.floor(sample),1);
 		}
@@ -57,7 +57,8 @@ WAVGEN={
 		headdv.setUint32(4,contentlength+36,true);
 		
 		var contentdv=new DataView(file,44);
-		var wavebuffer=this.generateSingleScore(hz,samplecnt);
+		
+		var wavebuffer=this.generateSingleScore(this.amplitude,hz,samplecnt);
 		var wavedv=new DataView(wavebuffer);
 		for(i=0;i<samplecnt;i++)
 		{
