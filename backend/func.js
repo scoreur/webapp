@@ -67,6 +67,7 @@ WAVGEN={
 				 wavedv.getInt16(i*2,1)
 			,1);
 		}
+		delete wavedv;delete wavebuffer;
 		
 		var b64file=this._arrayBufferToBase64(file);
 		delete headdv;
