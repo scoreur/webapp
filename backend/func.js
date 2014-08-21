@@ -41,7 +41,7 @@ WAVGEN={
 		}
 		return thisWave;
 	},
-	saveSingleScore:function(frnum,second){
+	saveSingleScore_rawbuffer:function(frnum,second){
 		second=second||1;
 		var hz=this.frnum2hz(frnum);
 		var samplecnt=this.sampleps*second;
@@ -69,12 +69,16 @@ WAVGEN={
 		}
 		delete wavedv;delete wavebuffer;
 		
-		var b64file=this._arrayBufferToBase64(file);
 		delete headdv;
 		delete contentdv;
-		delete file;
-		return "data:audio/wav;base64,"+b64file;
-	
+		return file;
+	},
+	buffer2b64src:function(buffer){
+		var b64=this._arrayBufferToBase64(buffer);
+		return "data:audio/wav;base64,"+b64;
+	},
+	buffer2blobsrc:function(buffer){
+		//faster implementation with blob url
 	},
 	//Read the scores and save into wav file.
 	saveScoreSequence:function(scores)
