@@ -85,6 +85,25 @@ WAVGEN={
 		//faster implementation with blob url
 	},
 	//Read the scores and save into wav file.
+	/*
+	Data scructure: 
+	{
+		time_unit:750,//(ms, 1 standard beat (48 score units), or approximately 1/4800 minute)
+		chorus:[
+			[
+				"piano",
+				[[1*12,1*12,440],[2*12,1*12,880],[3*12,2*12,740]], //scores
+				[1,0.2,0.2,0.5] //waveform
+			],
+			[
+				"smule",
+				[[5*12,1*12,440],[6*12,1*12,740],[7*12,1*12,880]],
+				[1]
+			]
+		]
+	}
+	
+	*/
 	generateScoreSequence:function(unit_ms,scores,waveform)
 	{
 		
