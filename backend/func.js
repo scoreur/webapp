@@ -18,6 +18,7 @@ WAVGEN={
 		return window.btoa( binary );
 	},
 	generateSingleScore:function(amplitude,freq,samplecnt){
+		if(samplecnt<this.sampleps/freq/10)throw "Strange samplecnt; are you generating a complete waveshape?";
 		var pack=function(p){
 			var plateau_start=0.1;
 			var plateau_end=0.7;
@@ -44,7 +45,8 @@ WAVGEN={
 	saveSingleScore_rawbuffer:function(frnum,second){
 		second=second||1;
 		var hz=this.frnum2hz(frnum);
-		var samplecnt=this.sampleps*second;
+		var samplecnt=Math.ceil(this.sampleps*second);
+		if(samplecnt<10)throw "Strange duration; are you generating a complete wave?";
 		var contentlength=2*samplecnt;
 		var file=new ArrayBuffer(contentlength+44);
 		var headdv=new DataView(file);
