@@ -42,6 +42,16 @@ WAVGEN={
 		}
 		return thisWave;
 	},
+	writeRIFFHeader:function(buffer){
+		var headdv=new DataView(buffer);
+		var contentlength=buffer.byteLength-44;
+		var riff_header="52494646FFFFFFFF57415645666D7420100000000100010044AC000010B102000200100064617461FFFFFFFF".match(/../g).map(function(s){return parseInt(s,16);});
+		for(var i=0;i<44;i++)
+			headdv.setUint8(i,riff_header[i]);
+		headdv.setUint32(40,contentlength,true);
+		headdv.setUint32(4,contentlength+36,true);
+		delete headdv;
+	},
 	saveSingleScore_rawbuffer:function(frnum,second){
 		second=second||1;
 		var hz=this.frnum2hz(frnum);
@@ -49,15 +59,8 @@ WAVGEN={
 		if(samplecnt<10)throw "Strange duration; are you generating a complete wave?";
 		var contentlength=2*samplecnt;
 		var file=new ArrayBuffer(contentlength+44);
-		var headdv=new DataView(file);
 		
-		var riff_header="52494646FFFFFFFF57415645666D7420100000000100010044AC000010B102000200100064617461FFFFFFFF".match(/../g).map(function(s){return parseInt(s,16);});
-		
-		for(var i=0;i<44;i++)
-			headdv.setUint8(i,riff_header[i]);
-		headdv.setUint32(40,contentlength,true);
-		headdv.setUint32(4,contentlength+36,true);
-		
+		this.writeRIFFHeader(file);
 		var contentdv=new DataView(file,44);
 		
 		var wavebuffer=this.generateSingleScore(this.amplitude,hz,samplecnt);
@@ -69,9 +72,8 @@ WAVGEN={
 				 wavedv.getInt16(i*2,1)
 			,1);
 		}
-		delete wavedv;delete wavebuffer;
-		
-		delete headdv;
+		delete wavedv;
+		delete wavebuffer;
 		delete contentdv;
 		return file;
 	},
@@ -83,6 +85,10 @@ WAVGEN={
 		//faster implementation with blob url
 	},
 	//Read the scores and save into wav file.
+	generateScoreSequence:function(unit_ms,scores,waveform)
+	{
+		
+	},
 	saveScoreSequence:function(scores)
 	{
 	
