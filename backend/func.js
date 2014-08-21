@@ -52,6 +52,15 @@ WAVGEN={
 		headdv.setUint32(4,contentlength+36,true);
 		delete headdv;
 	},
+	dvinc_Int16:function(main_dv,extra_dv,cnt){
+		for(var i=0;i<cnt;i++)
+		{
+			main_dv.setInt16(i*2,
+				 main_dv.getInt16(i*2,1)+
+				 extra_dv.getInt16(i*2,1)
+			,1);
+		}
+	},
 	saveSingleScore_rawbuffer:function(frnum,second){
 		second=second||1;
 		var hz=this.frnum2hz(frnum);
@@ -65,13 +74,8 @@ WAVGEN={
 		
 		var wavebuffer=this.generateSingleScore(this.amplitude,hz,samplecnt);
 		var wavedv=new DataView(wavebuffer);
-		for(i=0;i<samplecnt;i++)
-		{
-			contentdv.setInt16(i*2,
-				 contentdv.getInt16(i*2,1)+
-				 wavedv.getInt16(i*2,1)
-			,1);
-		}
+		this.dvinc_Int16(contentdv,wavedv,samplecnt);
+		
 		delete wavedv;
 		delete wavebuffer;
 		delete contentdv;
@@ -102,15 +106,66 @@ WAVGEN={
 			]
 		]
 	}
-	
 	*/
-	generateScoreSequence:function(unit_ms,scores,waveform)
-	{
+	generateScoreSequence_rawbuffer:function(unit_ms,scores,waveform)
+	{	
+		unit_ms/=1000;//translate to second
+		if(!waveform || waveform.length<=1)waveform=[1];
+		var unit_sample=unit_ms*this.sampleps;
+		var total_time=0;
+		for(var i=0;i<scores.length;i++)
+		{
+			if(total_time<scores[i][0]+scores[i][1])total_time=scores[i][0]+scores[i][1];
+		}
+		console.log("total time unit:",total_time);
+		var total_samples=Math.floor(total_time*unit_sample);
+		console.log("total_samples:",total_samples);
+		var output_buffer=new ArrayBuffer(total_samples*2+44);
 		
+		for(var i=0;i<scores.length;i++)
+		{
+			var hz=scores[i][2], start=Math.floor(unit_sample*scores[i][0]), duration=Math.floor(unit_sample*scores[i][1]);
+			console.log('scorer sd:',start,duration);
+			for(var wfi=0;wfi<waveform.length;wfi++)
+			{
+				var note=this.generateSingleScore(this.amplitude*waveform[wfi],hz*(wfi+1),duration);
+				var contentdv=new DataView(output_buffer,start*2);
+				var wavedv=new DataView(note);
+				this.dvinc_Int16(contentdv,wavedv,duration);
+			}
+		}
+		this.writeRIFFHeader(output_buffer);
+		return output_buffer;
 	},
-	saveScoreSequence:function(scores)
+	saveScoreSequence_rawbuffer:function(unit_ms,chorus)
 	{
-	
+		var buffers=[];
+		for(var i=0;i<chorus.length;i++)
+		{
+			var instrument=chorus[i];
+			buffers.push(
+				this.generateScoreSequence_rawbuffer(unit_ms,instrument[1],instrument[2])
+			);
+		}
+		
+		var maxlen=0;
+		for(var i=0;i<buffers.length;i++)
+		{
+			if(maxlen<buffers[i].byteLength)maxlen=buffers[i].byteLength;
+		}
+		console.log('chorus maxlen:',maxlen);
+		
+		var output_buffer=new ArrayBuffer(maxlen);
+		for(var i=0;i<buffers.length;i++)
+		{
+			var output_dv=new DataView(output_buffer,44);
+			var instrument_dv=new DataView(buffers[i],44);
+			console.log(output_buffer.byteLength,buffers[i].byteLength,(buffers[i].byteLength)/2-22);
+			this.dvinc_Int16(output_dv,instrument_dv,(buffers[i].byteLength)/2-22);
+		}
+		
+		this.writeRIFFHeader(output_buffer);
+		return output_buffer;
 	}
 	
 }
