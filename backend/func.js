@@ -1,4 +1,10 @@
+WAVEFORM={
+	piano:[1,0.5,0.3,0.08,0,0,0,0,0.04],
+	smule:[1,0.5],
+	sine:[1]
+}
 WAVGEN={
+	use_regular_waveform_data:0,//replace waveform data by database data
 	sampleps:44100,
 	wavSize:16,//2 bytes per sample
 	beatspm:108,
@@ -127,6 +133,7 @@ WAVGEN={
 			var hz=scores[i][2], start=Math.floor(unit_sample*scores[i][0]), duration=Math.floor(unit_sample*scores[i][1]);
 			console.log('scorer sd:',start,duration);
 			for(var wfi=0;wfi<waveform.length;wfi++)
+			if(waveform[wfi]>0)
 			{
 				var note=this.generateSingleScore(this.amplitude*waveform[wfi],hz*(wfi+1),duration);
 				var contentdv=new DataView(output_buffer,start*2);
@@ -137,7 +144,7 @@ WAVGEN={
 		this.writeRIFFHeader(output_buffer);
 		return output_buffer;
 	},
-	saveScoreSequence_rawbuffer:function(unit_ms,chorus)
+	saveScoreSequences_rawbuffer:function(unit_ms,chorus)
 	{
 		var buffers=[];
 		for(var i=0;i<chorus.length;i++)
@@ -166,6 +173,13 @@ WAVGEN={
 		
 		this.writeRIFFHeader(output_buffer);
 		return output_buffer;
+	},
+	RENDER:function(data){
+		var unit_ms=data.time_unit/48;
+		if(this.use_regular_waveform_data)
+			for(var i=0;i<data.chorus.length;i++)
+				if(WAVEFORM[data.chorus[i][0]])
+					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
+		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus);
 	}
-	
 }
