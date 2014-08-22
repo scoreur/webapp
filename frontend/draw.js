@@ -95,8 +95,8 @@ LINER={
 		}
 		elem.newrest=function(duration){
 			//to be implemented
-			//var img=elem.svg.text('re'+duration);
-			var img=elem.svg.circle(10).fill('red');
+			var img=elem.svg.text('r'+duration);
+			//var img=elem.svg.circle(10).fill('red');
 			img.remove();
 			return img;
 		}
@@ -241,8 +241,6 @@ LINER={
 							occupied_lower[s.time+i]=true;
 					}
 				});
-				console.log(occupied_upper.map(function(s){return s?'1':'0';}).join());
-				console.log(occupied_lower.map(function(s){return s?'1':'0';}).join());
 				
 				for(var i=0;i<=len;)
 				{
@@ -252,24 +250,21 @@ LINER={
 						if(elem.rests.upper[i])
 						{
 							elem.rests.upper[i].svgelem.remove();
-							delete elem.rests.upper[i];
+							//delete elem.rests.upper[i];
 						}
 						i++;continue;
 					}
-					
-					console.log('oldi',i);
-					if(!occupied_upper[i])
+					else
 					{
-						if((i%4==1)&&
+						if((i%4==0)&&
 							!occupied_upper[i+1] &&
 							!occupied_upper[i+2] &&
 							!occupied_upper[i+3]
 						)//put 4-re
 						{
-							if(elem.rests.upper[i+1]){elem.rests.upper[i+1].svgelem.remove();delete elem.rests.upper[i+1];}
-							if(elem.rests.upper[i+2]){elem.rests.upper[i+2].svgelem.remove();delete elem.rests.upper[i+2];}
-							if(elem.rests.upper[i+3]){elem.rests.upper[i+3].svgelem.remove();delete elem.rests.upper[i+3];}
-							
+							for(var j=i;j<=i+3;j++)
+							if(elem.rests.upper[j]){elem.rests.upper[j].svgelem.remove();delete elem.rests.upper[j];
+							}
 							rest=elem.newrest(4);
 							elem.svg.upper.add(rest);
 							elem.rests.upper[i]={time:i,duration:4,svgelem:rest}
@@ -281,11 +276,13 @@ LINER={
 							i+=4;
 						}
 						else
-						if((i%2==1)&&
+						if((i%2==0)&&
 							!occupied_upper[i+1]
 						)//put 2-re
 						{
-							if(elem.rests.upper[i+1]){elem.rests.upper[i+1].svgelem.remove();delete elem.rests.upper[i+1];}
+							for(var j=i;j<=i+1;j++)
+							if(elem.rests.upper[j]){elem.rests.upper[j].svgelem.remove();delete elem.rests.upper[j];
+							}
 							
 							rest=elem.newrest(2);
 							elem.svg.upper.add(rest);
@@ -300,6 +297,8 @@ LINER={
 						}
 						else
 						{
+							if(elem.rests.upper[i]){elem.rests.upper[i].svgelem.remove();delete elem.rests.upper[i];}	
+							
 							rest=elem.newrest(1);
 							elem.svg.upper.add(rest);
 							elem.rests.upper[i]={time:i,duration:1,svgelem:rest}
@@ -309,7 +308,6 @@ LINER={
 							);
 							i+=1;
 						}
-						console.log('newi',i);
 					}
 				}
 				
