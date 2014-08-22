@@ -79,7 +79,7 @@ LINER={
 			elem.svg.lower.line(x,low,x,high).stroke('grey');
 		}
 		
-		elem.newnote=function(duration){
+		elem.newnote=function(duration){//fudian?
 			var src;
 			switch(duration){
 				case 1:src='./resources/staff/quarternote.png';break;
@@ -94,11 +94,30 @@ LINER={
 			return img;
 		}
 		elem.newrest=function(duration){
-			//to be implemented
-			var img=elem.svg.text('r'+duration);
-			//var img=elem.svg.circle(10).fill('red');
-			img.remove();
-			return img;
+			//to be implemented: fudian?
+			var el;
+			switch(duration){
+				case 1:
+					el=elem.svg.image('./resources/staff/quarter_rest.png').size(LINER.settings.scoresize,LINER.settings.scoresize);
+				break;
+				case 3:
+				case 2:
+					el=elem.svg.group().size(LINER.settings.lineheight,2*LINER.settings.lineheight);
+					el.rect(LINER.settings.lineheight,2*LINER.settings.lineheight).opacity(0)
+					el.rect(LINER.settings.lineheight,LINER.settings.lineheight*0.5).center(LINER.settings.lineheight*0.5,LINER.settings.lineheight*0.75).fill('black');
+				break;
+				case 4:
+					el=elem.svg.group().size(LINER.settings.lineheight,2*LINER.settings.lineheight);
+					el.rect(LINER.settings.lineheight,2*LINER.settings.lineheight).opacity(0)
+					el.rect(LINER.settings.lineheight,LINER.settings.lineheight*0.5).center(LINER.settings.lineheight*0.5,LINER.settings.lineheight*0.25).fill('black');
+				break;
+				case 8:
+					el=elem.svg.text('re8');
+				break;
+			}
+			
+			el.remove();
+			return el;
 		}
 		elem.scores=[];//{time,duration,frnum,svgelem}
 		elem.rests={upper:[],lower:[]};//{duration,svgelem}
