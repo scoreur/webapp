@@ -52,6 +52,9 @@ LINER={
 		
 		elem.svg.upper.tails=elem.svg.upper.nested();
 		elem.svg.lower.tails=elem.svg.lower.nested();
+		elem.svg.upper.addlines=elem.svg.upper.nested();
+		elem.svg.lower.addlines=elem.svg.lower.nested();
+		
 		for(var i=1;i<=5;i++)
 		{
 			var lineheight=LINER.y_conversion(i);
@@ -159,10 +162,13 @@ LINER={
 					
 					mysc.svgelem.tail=mysc.svgelem.parent.tails.line(tx,tys,tx,tye).stroke('black').opacity(1);
 					
+					liner.update_additional_line(mysc.lastx);
+					liner.update_additional_line(time);
+					mysc.lastx=time;
 					return mysc.svgelem;
 				}
-				mysc.moveTo(mysc.time,mysc.frnum);
 				elem.scores.push(mysc);
+				mysc.moveTo(mysc.time,mysc.frnum);
 				return mysc;
 			},
 			addscores:function(scores){
@@ -170,6 +176,33 @@ LINER={
 			},
 			listscores:function(){
 				return elem.scores;
+			},
+			update_additional_line:function(time){
+				var scores=elem.scores;
+				var scorelines=[];
+				scores.map(function(s){
+					if(s.time==time)
+						scorelines.push(LINER.line_conversion(s.frnum));
+				});
+				var highest=0,lowest=0,hasmid=false;
+				
+				scorelines.map(function(l){
+					if(l>highest)highest=l;
+					if(l<lowest)lowest=l;
+					if(l==0)hasmid=true;
+				});
+				if(elem.addline[time])
+					while(elem.addline[time].length)
+						elem.addline[time].pop().remove();
+				
+				elem.addline[time]=[];
+				var xs=LINER.x_conversion(time),xe=LINER.x_conversion(time+1);
+				if(hasmid){
+					var y=LINER.y_conversion(0);
+					elem.addline[time].push(elem.svg.upper.addlines.line(xs,y,xe,y).stroke('black'));
+				}
+				
+				
 			}
 		};
 		
