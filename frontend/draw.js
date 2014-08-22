@@ -241,8 +241,15 @@ LINER={
 							occupied_lower[s.time+i]=true;
 					}
 				});
+			
+	
+				function none(arr,s,e){
+					for(var i=s;i<=e;i++)
+						if(arr[i])return 0;
+					return 1;
+				}
 				
-				for(var i=0;i<=len;)
+				for(var i=0;i<=len;)//upper
 				{
 					var rest;				
 					if(occupied_upper[i])
@@ -256,10 +263,7 @@ LINER={
 					}
 					else
 					{
-						if((i%4==0)&&
-							!occupied_upper[i+1] &&
-							!occupied_upper[i+2] &&
-							!occupied_upper[i+3]
+						if((i%4==0)&& none(occupied_upper,i+1,i+3)
 						)//put 4-re
 						{
 							for(var j=i;j<=i+3;j++)
@@ -311,6 +315,73 @@ LINER={
 					}
 				}
 				
+				for(var i=0;i<=len;)//lower
+				{
+					var rest;				
+					if(occupied_lower[i])
+					{
+						if(elem.rests.lower[i])
+						{
+							elem.rests.lower[i].svgelem.remove();
+							//delete elem.rests.lower[i];
+						}
+						i++;continue;
+					}
+					else
+					{
+						if((i%4==0)&& none(occupied_lower,i+1,i+3)
+						)//put 4-re
+						{
+							for(var j=i;j<=i+3;j++)
+							if(elem.rests.lower[j]){elem.rests.lower[j].svgelem.remove();delete elem.rests.lower[j];
+							}
+							rest=elem.newrest(4);
+							elem.svg.lower.add(rest);
+							elem.rests.lower[i]={time:i,duration:4,svgelem:rest}
+							rest.center(
+								LINER.x_conversion(i)+LINER.settings.scorewidth/2,
+								LINER.y_conversion(-3)
+							);
+							
+							i+=4;
+						}
+						else
+						if((i%2==0)&&
+							!occupied_lower[i+1]
+						)//put 2-re
+						{
+							for(var j=i;j<=i+1;j++)
+							if(elem.rests.lower[j]){elem.rests.lower[j].svgelem.remove();delete elem.rests.lower[j];
+							}
+							
+							rest=elem.newrest(2);
+							elem.svg.lower.add(rest);
+							elem.rests.lower[i]={time:i,duration:2,svgelem:rest}
+							rest.center(
+								LINER.x_conversion(i)+LINER.settings.scorewidth/2,
+								LINER.y_conversion(-3)
+							);
+
+							
+							i+=2;
+						}
+						else
+						{
+							if(elem.rests.lower[i]){elem.rests.lower[i].svgelem.remove();delete elem.rests.lower[i];}	
+							
+							rest=elem.newrest(1);
+							elem.svg.lower.add(rest);
+							elem.rests.lower[i]={time:i,duration:1,svgelem:rest}
+							rest.center(
+								LINER.x_conversion(i)+LINER.settings.scorewidth/2,
+								LINER.y_conversion(-3)
+							);
+							i+=1;
+						}
+					}
+				}
+			
+			
 			}
 		};
 		
