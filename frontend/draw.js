@@ -268,7 +268,7 @@ LINER={
 					return 1;
 				}
 				
-				for(var i=0;i<=len;)//upper
+				for(var i=0;i<len;)//upper
 				{		
 					if(occupied_upper[i])
 					{
@@ -304,7 +304,7 @@ LINER={
 					}
 				}
 			
-				for(var i=0;i<=len;)//lower
+				for(var i=0;i<len;)//lower
 				{		
 					if(occupied_lower[i])
 					{
