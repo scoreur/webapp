@@ -266,10 +266,17 @@ WAVGEN_NEW={
 			});
 		}
 	},
-	_scoreBufferCache:[],//to be implemented
+	_scoreBufferCache:{},
 	generateScoreSequencePlayer:function(unit_ms,scores,waveform,callback){
 		var unit_time=unit_ms/1000;//translate to second
-		var buffers=[];
+		if(waveform.join)
+		{
+			var waveform_index=waveform.join(',');
+			var buffers=this._scoreBufferCache[waveform_index];
+			if(!buffers)buffers=this.	_scoreBufferCache[waveform_index]=[];
+		}
+		else var buffers=[];
+		
 		var single_note=[];
 		var players=[];
 		var context=this.ctx;
@@ -277,7 +284,7 @@ WAVGEN_NEW={
 			for(var i=0;i<scores.length;i++)
 			{
 				var hz=scores[i][2],duration=unit_time*scores[i][1],start=unit_time*scores[i][0];
-				var kwd=hz+'hz,'+scores[i][1];			
+				var kwd=hz+'hz,'+Math.floor(duration*1e6)+'us';
 				
 				var playerNode = context.createBufferSource();
 				playerNode.buffer = buffers[kwd];
@@ -294,7 +301,7 @@ WAVGEN_NEW={
 		for(var i=0;i<scores.length;i++)
 		{
 			var hz=scores[i][2],duration=unit_time*scores[i][1],start=unit_time*scores[i][0];
-			var kwd=hz+'hz,'+scores[i][1];
+			var kwd=hz+'hz,'+Math.floor(duration*1e6)+'us';
 			if(!buffers[kwd])
 			{
 				var done_c=function(taskfinished,kwd){
@@ -308,6 +315,7 @@ WAVGEN_NEW={
 				this.generateSingleScore_waveform(this.amplitude,hz,duration,waveform,done.done);
 			}
 		}
+		setTimeout(q.newTask(),1);//fire with empty queue!
 		/*
 		
 		for(var i=0;i<scores.length;i++)
@@ -330,11 +338,11 @@ WAVGEN_NEW={
 	},
 	generateScoreSequencesPlayer:function(unit_ms,chorus,callback)
 	{
-		var players=[];
+		var ssplayers=[];
 		var q=new QUEUE(function(){
-			console.log('ss all finished',players);	
+			console.log('ss all finished',ssplayers);	
 			callback(function(){
-				players.map(function(p){p();});	
+				ssplayers.map(function(p){p();});	
 			});
 		});
 		for(var i=0;i<chorus.length;i++)
@@ -342,7 +350,7 @@ WAVGEN_NEW={
 			var instrument=chorus[i];
 			var taskFinished=q.newTask();
 			var done=function(p){
-				players.push(p);
+				ssplayers.push(p);
 				taskFinished();
 			}
 			this.generateScoreSequencePlayer(unit_ms,instrument[1],instrument[2],done);
