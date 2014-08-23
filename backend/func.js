@@ -366,6 +366,19 @@ WAVGEN_NEW={
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		this.generateScoreSequencesPlayer(unit_ms,data.chorus,function(s){s();});
+	}
+}
+WAVPLAY={
+	//An object to create real-time sound for interaction.
+	ctx:(function(){
+		var ctx=new (window.AudioContext || window.webkitAudioContext)();
+		ctx.sampleRate=this.sampleps;
+		return ctx;
+	})(),
+	frnum2hz:function(frnum){
+		//440hz = 48
+		frnum-=48;
+		return 440*Math.pow(2,frnum/12);
 	},
 	sourceNodes:[],
 	gainNodes:[],
@@ -375,13 +388,37 @@ WAVGEN_NEW={
 		osc.type='sine';
 		osc.frequency.value=hz;
 		osc.numberOfOutputs=1e9;
+		osc.start();
 		return this.sourceNodes[hz]=osc;
 	},
-	createGain:function(hz){
-		//waveform stuff?
+	createGain:function(hz,waveform){
+		if(!waveform || waveform.length<=1)waveform=[1];
+		var kwd=hz+'hz,'+waveform.join(',')
+		if(this.gainNodes[kwd])return this.gainNodes[kwd];
+		
 		var out_gain=this.ctx.createGain();
 		out_gain.gain.value=0;
-		this.addFreq(hz).connect(out_gain);
-		return out_gain;
+		for(var wfi=0;wfi<waveform.length;wfi++)
+		{
+			var intm_gain=this.ctx.createGain();
+			intm_gain.gain.value=waveform[wfi];
+			this.addFreq(hz).connect(intm_gain);
+			intm_gain.connect(out_gain);
+		}
+		return this.gainNodes[kwd]=out_gain;
+	},
+	score_start:function(frnum,waveform){
+		var gain=this.createGain(this.frnum2hz(frnum),waveform);
+		gain.connect(this.ctx.destination);
+		gain.gain.value=1;//smooth? todo
+	},
+	score_end:function(frnum,waveform){
+		var gain=this.createGain(this.frnum2hz(frnum),waveform);
+		gain.gain.value=0;//smooth? todo
+	},
+	end_all:function(){
+		var gn=this.gainNodes;
+		for(i in gn)
+			gn[i].gain.value=0;
 	}
 }
