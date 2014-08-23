@@ -235,8 +235,43 @@ WAVGEN_NEW={
 		};
 		octx.startRendering();
 	},
+	generateSingleScode_waveform:function(amplitude,freq,second,waveform,callback){
+		if(!waveform || waveform.length<=1)waveform=[1];
+		var buffers=[];
+		var q=new QUEUE(function(){
+			console.log('all buffer done:',buffers);
+			//merge buffer
+			if(buffers.length<=1)return callback(buffers[0]);
+			var cd=[];
+			for(var i=0;i<buffers.length;i++)
+				cd[i]=buffers[i].getChannelData(0);
+			for(var i=1;i<buffers.length;i++)
+			for(var l=0;l<cd[0].length;l++)
+			{	
+					cd[0][l]+=cd[i][l];
+			}
+			for(var i=1;i<buffers.length;i++){
+				delete cd[i];
+				delete buffers[i];
+			}
+			return callback(buffers[0]);
+		});
+		for(var wfi=0;wfi<waveform.length;wfi++)
+		if(waveform[wfi]>0)
+		{	
+			var taskfinished=q.newTask();
+			this.generateSingleScore(amplitude*waveform[wfi],freq*(wfi+1),second,function(b){
+				buffers.push(b);
+				taskfinished();
+			});
+		}
+	},
 	saveScoreSequence:function(){},//download data?
-	
+	generateScoreSequence:function(unit_ms,scores,waveform){
+		var buffers=[];
+		
+		
+	},
 	sourceNodes:[],
 	gainNodes:[],
 	addFreq:function(hz){
