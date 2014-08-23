@@ -1,4 +1,4 @@
-WAVEFORM={
+window.WAVEFORM={
 	piano:[1,0.5,0.3,0.08,0,0,0,0,0.04],
 	smule:[1,0.5],
 	sine:[1]
@@ -7,12 +7,23 @@ WAVGEN={
 	use_regular_waveform_data:0,//replace waveform data by database data
 	sampleps:44100,
 	wavSize:16,//2 bytes per sample
-	beatspm:108,
 	amplitude:3000,
 	frnum2hz:function(frnum){
 		//440hz = 48
 		frnum-=48;
 		return 440*Math.pow(2,frnum/12);
+	},
+	pack:function(p){
+		var plateau_start=0.1;
+		var plateau_end=0.7;
+		if(p<plateau_start){
+			//0..start
+			return 0.5-0.5*Math.cos(Math.PI*(p/plateau_start));
+		}
+		else if(p>plateau_end){
+			return 0.5-0.5*Math.cos(Math.PI*( (1-p)/(1-plateau_end)  ));
+		}
+		else return 1.0;
 	},
 	_arrayBufferToBase64:function( buffer ) {
 		var binary = ''
@@ -25,18 +36,7 @@ WAVGEN={
 	},
 	generateSingleScore:function(amplitude,freq,samplecnt){
 		if(samplecnt<this.sampleps/freq/10)throw "Strange samplecnt; are you generating a complete waveshape?";
-		var pack=function(p){
-			var plateau_start=0.1;
-			var plateau_end=0.7;
-			if(p<plateau_start){
-				//0..start
-				return 0.5-0.5*Math.cos(Math.PI*(p/plateau_start));
-			}
-			else if(p>plateau_end){
-				return 0.5-0.5*Math.cos(Math.PI*( (1-p)/(1-plateau_end)  ));
-			}
-			else return 1.0;
-		}
+		var pack=this.pack;
 		
 		var thisWave=new ArrayBuffer(2*samplecnt);
 		var dv=new DataView(thisWave,0);
@@ -193,5 +193,65 @@ WAVGEN={
 		el.autoplay=1;
 		el.src=src;
 		document.body.appendChild(el);
+	}
+}
+WAVGEN_NEW={
+	sampleps:44100,
+	pack:function(p){
+		var plateau_start=0.1;
+		var plateau_end=0.7;
+		if(p<plateau_start){
+			//0..start
+			return 0.5-0.5*Math.cos(Math.PI*(p/plateau_start));
+		}
+		else if(p>plateau_end){
+			return 0.5-0.5*Math.cos(Math.PI*( (1-p)/(1-plateau_end)  ));
+		}
+		else return 1.0;
+	},
+	ctx:(function(){
+		var ctx=new (window.AudioContext || window.webkitAudioContext)();
+		ctx.sampleRate=this.sampleps;
+		return ctx;
+	})(),
+	generateSingleScore:function(amplitude,freq,second,callback){
+		var pack=this.pack;
+		var octx=new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1,this.sampleps*second,this.sampleps);
+		var g=octx.createGain();
+		g.gain.value=amplitude;
+		g.connect(octx.destination);
+		var s=octx.createOscillator();
+		s.frequency.value=freq;
+		s.connect(g);
+		s.start(0);
+		octx.oncomplete=function(d){
+			if(!d.returnValue)throw "Octx generation error";
+			var arr=d.renderedBuffer.getChannelData(0);
+			for(var i=0;i<arr.length;i++)
+			{
+				arr[i]*=pack(i/arr.length);
+			}
+			callback(d.renderedBuffer);
+		};
+		octx.startRendering();
+	},
+	saveScoreSequence:function(){},//download data?
+	
+	sourceNodes:[],
+	gainNodes:[],
+	addFreq:function(hz){
+		if(this.sourceNodes[hz])return this.sourceNodes[hz];
+		var osc=this.ctx.createOscillator();
+		osc.type='sine';
+		osc.frequency.value=hz;
+		osc.numberOfOutputs=1e9;
+		return this.sourceNodes[hz]=osc;
+	},
+	createGain:function(hz){
+		//waveform stuff?
+		var out_gain=this.ctx.createGain();
+		out_gain.gain.value=0;
+		this.addFreq(hz).connect(out_gain);
+		return out_gain;
 	}
 }
