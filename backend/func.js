@@ -270,9 +270,7 @@ WAVGEN_NEW={
 		var unit_time=unit_ms/1000;//translate to second
 		var buffers=[];
 		var single_note=[];
-		players=[];
-		delayers=[];
-		var player;
+		var players=[];
 		var context=this.ctx;
 		var q=new QUEUE(function(){
 			for(var i=0;i<scores.length;i++)
@@ -280,19 +278,15 @@ WAVGEN_NEW={
 				var hz=scores[i][2],duration=unit_time*scores[i][1],start=unit_time*scores[i][0];
 				var kwd=hz+'hz,'+scores[i][1];			
 				
-				var delayNode=context.createDelay();
-				delayNode.connect(context.destination);
-				delayNode.delayTime.value=start;
-				console.log('delayer:',kwd,delayNode,start);
-				delayers.push(delayNode);
 				var playerNode = context.createBufferSource();
 				playerNode.buffer = buffers[kwd];
-				playerNode.connect(delayNode); 
+				playerNode.delay=start;
+				playerNode.connect(context.destination); 
 				players.push(playerNode);
 			}
-			player=function(){
+			var player=function(){
 				for(var i=0;i<players.length;i++)
-					players[i].start();
+					players[i].start(context.currentTime+players[i].delay);
 			}
 			callback(player);
 		});
