@@ -407,14 +407,38 @@ WAVPLAY={
 		}
 		return this.gainNodes[kwd]=out_gain;
 	},
+	gradient_delay_1:3,
+	gradient_delay_2:1,
 	score_start:function(frnum,waveform){
 		var gain=this.createGain(this.frnum2hz(frnum),waveform);
 		gain.connect(this.ctx.destination);
-		gain.gain.value=1;//smooth? todo
+		//gain.gain.value=1;//smooth? 
+		gain.gradient_phase=1;
+		var delay=this.gradient_delay_1;
+		var adj=function(){//simple linear adjustment
+			if(gain.gradient_phase==1)
+			{
+				gain.gain.value+=0.1;//gain.gain.value=(1+gain.gain.value)/2;
+				setTimeout(adj,delay);
+				if(gain.gain.value>0.99){gain.gradient_phase=0;gain.gain.value=1;}
+			}
+		}
+		setTimeout(adj,delay);
 	},
 	score_end:function(frnum,waveform){
 		var gain=this.createGain(this.frnum2hz(frnum),waveform);
-		gain.gain.value=0;//smooth? todo
+		//gain.gain.value=0;//smooth? 
+		gain.gradient_phase=-1;
+		var delay=this.gradient_delay_2;
+		var adj=function(){//simple linear adjustment
+			if(gain.gradient_phase==-1)
+			{
+				gain.gain.value-=0.1;//gain.gain.value=(1+gain.gain.value)/2;
+				setTimeout(adj,delay);
+				if(gain.gain.value<0.01){gain.gradient_phase=0;gain.gain.value=0;}
+			}
+		}
+		setTimeout(adj,delay);
 	},
 	end_all:function(){
 		var gn=this.gainNodes;
