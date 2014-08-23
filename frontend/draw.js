@@ -4,8 +4,9 @@ LINER={
 		lineheight:12,
 		scorewidth:22,
 		scoresize:16,
-		beatsperseq:4,
-		seqperline:12,
+		tailsize:20,
+		beatsperseq:8,
+		seqperline:6,
 		top_line:8,
 		initial_padding:100,
 		clef_x_offset:30,
@@ -82,15 +83,18 @@ LINER={
 		elem.newnote=function(duration){//fudian?
 			var src;
 			switch(duration){
-				case 1:src='./resources/staff/quarternote.png';break;
-				case 2:
-				case 3:src='./resources/staff/halfnote.png';break;
-				case 4:src='./resources/staff/fullnote.png';break;
+				case 1://eighth/quaver
+				case 2://quarter
+				case 3:src='./resources/staff/quarternote.png';break;
+				case 4:
+				case 6:src='./resources/staff/halfnote.png';break;
+				case 8:src='./resources/staff/fullnote.png';break;	
 			}
 			var img=elem.svg.image(src);
 			img.remove();
 			img.size(LINER.settings.scoresize,LINER.settings.scoresize);
 			img.scoredata={duration:duration,cx:0,cy:0};
+			if(duration==1)img.stroke('red');
 			return img;
 		}
 		elem.newrest=function(duration){
@@ -98,21 +102,19 @@ LINER={
 			var el;
 			switch(duration){
 				case 1:
-					el=elem.svg.image('./resources/staff/quarter_rest.png').size(LINER.settings.scoresize,LINER.settings.scoresize);
-				break;
-				case 3:
+					el=elem.svg.image('./resources/staff/quaver_rest.png').size(LINER.settings.scoresize,LINER.settings.scoresize);break;
 				case 2:
-					el=elem.svg.group().size(LINER.settings.lineheight,2*LINER.settings.lineheight);
-					el.rect(LINER.settings.lineheight,2*LINER.settings.lineheight).opacity(0)
-					el.rect(LINER.settings.lineheight,LINER.settings.lineheight*0.5).center(LINER.settings.lineheight*0.5,LINER.settings.lineheight*0.75).fill('black');
+					el=elem.svg.image('./resources/staff/quarter_rest.png').size(LINER.settings.scoresize,LINER.settings.scoresize);
 				break;
 				case 4:
 					el=elem.svg.group().size(LINER.settings.lineheight,2*LINER.settings.lineheight);
 					el.rect(LINER.settings.lineheight,2*LINER.settings.lineheight).opacity(0)
-					el.rect(LINER.settings.lineheight,LINER.settings.lineheight*0.5).center(LINER.settings.lineheight*0.5,LINER.settings.lineheight*0.25).fill('black');
+					el.rect(LINER.settings.lineheight,LINER.settings.lineheight*0.5).center(LINER.settings.lineheight*0.5,LINER.settings.lineheight*0.75).fill('black');
 				break;
 				case 8:
-					el=elem.svg.text('re8');
+					el=elem.svg.group().size(LINER.settings.lineheight,2*LINER.settings.lineheight);
+					el.rect(LINER.settings.lineheight,2*LINER.settings.lineheight).opacity(0)
+					el.rect(LINER.settings.lineheight,LINER.settings.lineheight*0.5).center(LINER.settings.lineheight*0.5,LINER.settings.lineheight*0.25).fill('black');
 				break;
 			}
 			
@@ -150,44 +152,7 @@ LINER={
 						mysc.svgelem.scoredata.cy+y
 					);
 					
-					if(mysc.svgelem.tail){
-						mysc.svgelem.tail.remove();
-					}
-					var tx,tys,tye,spacing=0.2;
-					if(line>=0&&line<=3){//upper right
-						tx=LINER.x_conversion(time)+(
-							LINER.settings.scorewidth
-							+LINER.settings.scoresize
-						)/2;
-						tys=LINER.y_conversion(line);
-						tye=LINER.y_conversion(5-spacing);
-					}
-					else if(line>3){//lower left
-						tx=LINER.x_conversion(time)+(
-							LINER.settings.scorewidth
-							-LINER.settings.scoresize
-						)/2;
-						tys=LINER.y_conversion(line);
-						tye=LINER.y_conversion(1+spacing);
-					}
-					else if(line<-3){//upper right
-						tx=LINER.x_conversion(time)+(
-							LINER.settings.scorewidth
-							+LINER.settings.scoresize
-						)/2;
-						tys=LINER.y_conversion(line);
-						tye=LINER.y_conversion(-1-spacing);
-					}
-					else if(line<0&&line>=-3){//lower left
-						tx=LINER.x_conversion(time)+(
-							LINER.settings.scorewidth
-							-LINER.settings.scoresize
-						)/2;
-						tys=LINER.y_conversion(line);
-						tye=LINER.y_conversion(-5+spacing);
-					}
-					if(mysc.duration<4)
-					mysc.svgelem.tail=mysc.svgelem.parent.tails.line(tx,tys,tx,tye).stroke('black').opacity(1);
+					liner.update_tail(mysc);
 					
 					liner.update_additional_line(mysc.lastx);
 					liner.update_additional_line(time);
@@ -206,6 +171,67 @@ LINER={
 			},
 			listscores:function(){
 				return elem.scores;
+			},
+			update_tail:function(mysc){
+				var line=LINER.line_conversion(mysc.frnum),time=mysc.time;
+				if(mysc.svgelem.tail){
+					mysc.svgelem.tail.remove();
+				}
+				var tx,tys,tye,spacing=0.2,isup=false;
+				if(line>=0&&line<=3){//upper right
+					isup=1;
+					tx=LINER.x_conversion(time)+(
+						LINER.settings.scorewidth
+						+LINER.settings.scoresize
+					)/2;
+					tys=LINER.y_conversion(line);
+					tye=LINER.y_conversion(5-spacing);
+				}
+				else if(line>3){//lower left
+					tx=LINER.x_conversion(time)+(
+						LINER.settings.scorewidth
+						-LINER.settings.scoresize
+					)/2;
+					tys=LINER.y_conversion(line);
+					tye=LINER.y_conversion(1+spacing);
+				}
+				else if(line<-3){//upper right
+					isup=1;
+					tx=LINER.x_conversion(time)+(
+						LINER.settings.scorewidth
+						+LINER.settings.scoresize
+					)/2;
+					tys=LINER.y_conversion(line);
+					tye=LINER.y_conversion(-1-spacing);
+				}
+				else if(line<0&&line>=-3){//lower left
+					tx=LINER.x_conversion(time)+(
+						LINER.settings.scorewidth
+						-LINER.settings.scoresize
+					)/2;
+					tys=LINER.y_conversion(line);
+					tye=LINER.y_conversion(-5+spacing);
+				}
+				/*
+				
+				if(mysc.duration<8)
+				mysc.svgelem.tail=mysc.svgelem.parent.tails.line(tx,tys,tx,tye).stroke('black').opacity(1);
+				*/
+				mysc.svgelem.tail=mysc.svgelem.parent.tails.nested();
+				if(mysc.duration==1){//quaver
+					mysc.svgelem.tail.line(tx,tys,tx,tye).stroke('black').opacity(1);
+					var src=isup?'./resources/staff/notetail_up.png':'./resources/staff/notetail_down.png';
+					mysc.svgelem.tail.image(src).size(LINER.settings.tailsize,LINER.settings.tailsize).center(tx,tye);
+				}
+				if(mysc.duration==2 || mysc.duration==4){//quarter or half
+					mysc.svgelem.tail.line(tx,tys,tx,tye).stroke('black').opacity(1);
+				}
+				if(mysc.duration==3 || mysc.duration==6){//1.5 quarter
+					mysc.svgelem.tail.line(tx,tys,tx,tye).stroke('black').opacity(1);
+					mysc.svgelem.tail.circle(LINER.settings.scoresize/3).center(tx+6,tys+4).fill('black').opacity(1);
+				}
+				
+			
 			},
 			update_additional_line:function(time){
 				var scores=elem.scores;
