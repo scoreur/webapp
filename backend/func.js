@@ -181,5 +181,17 @@ WAVGEN={
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus);
+	},
+	PLAY:function(data){
+		var src=this.buffer2b64src(this.RENDER(data));
+		var el=document.createElement('audio');
+		el.onended=function(){
+			el.src='';
+			document.body.removeChild(el);
+			delete el;
+		}
+		el.autoplay=1;
+		el.src=src;
+		document.body.appendChild(el);
 	}
 }
