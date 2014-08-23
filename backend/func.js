@@ -443,6 +443,26 @@ WAVPLAY={
 	end_all:function(){
 		var gn=this.gainNodes;
 		for(i in gn)
+		{
+			var gain=gn[i];
+			(function(gain){
+				var delay=1;
+				gain.gradient_phase=-2;
+				var adj=function(){//simple exponential adjustment
+					if(gain.gradient_phase==-2)
+					{
+						gain.gain.value*=0.8;//gain.gain.value=(1+gain.gain.value)/2;
+						setTimeout(adj,delay);
+						if(gain.gain.value<0.01){gain.gradient_phase=0;gain.gain.value=0;}
+					}
+				}
+				setTimeout(adj,delay);
+			})(gn[i]);
+		}
+	},
+	stop_all:function(){
+		var gn=this.gainNodes;
+		for(i in gn)
 			gn[i].gain.value=0;
 	}
 }
