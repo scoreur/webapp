@@ -235,11 +235,10 @@ WAVGEN_NEW={
 		};
 		octx.startRendering();
 	},
-	generateSingleScode_waveform:function(amplitude,freq,second,waveform,callback){
+	generateSingleScore_waveform:function(amplitude,freq,second,waveform,callback){
 		if(!waveform || waveform.length<=1)waveform=[1];
 		var buffers=[];
 		var q=new QUEUE(function(){
-			console.log('all buffer done:',buffers);
 			//merge buffer
 			if(buffers.length<=1)return callback(buffers[0]);
 			var cd=[];
@@ -267,8 +266,70 @@ WAVGEN_NEW={
 		}
 	},
 	saveScoreSequence:function(){},//download data?
-	generateScoreSequence:function(unit_ms,scores,waveform){
+	generateScoreSequencePlayer:function(unit_ms,scores,waveform,callback){
+		var unit_time=unit_ms/1000;//translate to second
 		var buffers=[];
+		var single_note=[];
+		players=[];
+		delayers=[];
+		var player;
+		var context=this.ctx;
+		var q=new QUEUE(function(){
+			for(var i=0;i<scores.length;i++)
+			{
+				var hz=scores[i][2],duration=unit_time*scores[i][1],start=unit_time*scores[i][0];
+				var kwd=hz+'hz,'+scores[i][1];			
+				
+				var delayNode=context.createDelay();
+				delayNode.connect(context.destination);
+				delayNode.delayTime.value=start;
+				console.log('delayer:',kwd,delayNode,start);
+				delayers.push(delayNode);
+				var playerNode = context.createBufferSource();
+				playerNode.buffer = buffers[kwd];
+				playerNode.connect(delayNode); 
+				players.push(playerNode);
+			}
+			player=function(){
+				for(var i=0;i<players.length;i++)
+					players[i].start();
+			}
+			callback(player);
+		});
+		for(var i=0;i<scores.length;i++)
+		{
+			var hz=scores[i][2],duration=unit_time*scores[i][1],start=unit_time*scores[i][0];
+			var kwd=hz+'hz,'+scores[i][1];
+			if(!buffers[kwd])
+			{
+				var done_c=function(taskfinished,kwd){
+					this.done=function(buff){
+						buffers[kwd]=buff;
+						console.log(lastbuff=buff);
+						taskfinished();
+					}
+				};
+				done=new done_c(q.newTask(),kwd);
+				this.generateSingleScore_waveform(this.amplitude,hz,duration,waveform,done.done);
+			}
+		}
+		/*
+		
+		for(var i=0;i<scores.length;i++)
+		{
+			var hz=scores[i][2], start=Math.floor(unit_sample*scores[i][0]), duration=Math.floor(unit_sample*scores[i][1]);
+			console.log('scorer sd:',start,duration);
+			for(var wfi=0;wfi<waveform.length;wfi++)
+			if(waveform[wfi]>0)
+			{
+				var note=this.generateSingleScore(this.amplitude*waveform[wfi],hz*(wfi+1),duration);
+				var contentdv=new DataView(output_buffer,start*2);
+				var wavedv=new DataView(note);
+				this.dvinc_Int16(contentdv,wavedv,duration);
+			}
+		}
+		this.writeRIFFHeader(output_buffer);
+		return output_buffer;*/
 		
 		
 	},
