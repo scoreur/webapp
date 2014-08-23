@@ -221,14 +221,17 @@ LINER={
 				if(mysc.duration==1){//quaver
 					mysc.svgelem.tail.line(tx,tys,tx,tye).stroke('black').opacity(1);
 					var src=isup?'./resources/staff/notetail_up.png':'./resources/staff/notetail_down.png';
-					mysc.svgelem.tail.image(src).size(LINER.settings.tailsize,LINER.settings.tailsize).center(tx,tye);
+					mysc.svgelem.tail.image(src).size(LINER.settings.tailsize,LINER.settings.tailsize).center(tx,tye+(isup?0.5:-0.5)*LINER.settings.tailsize);
 				}
 				if(mysc.duration==2 || mysc.duration==4){//quarter or half
 					mysc.svgelem.tail.line(tx,tys,tx,tye).stroke('black').opacity(1);
 				}
 				if(mysc.duration==3 || mysc.duration==6){//1.5 quarter
 					mysc.svgelem.tail.line(tx,tys,tx,tye).stroke('black').opacity(1);
-					mysc.svgelem.tail.circle(LINER.settings.scoresize/3).center(tx+6,tys+4).fill('black').opacity(1);
+					var cx=LINER.x_conversion(time)
+					+0.8*LINER.settings.scorewidth
+					+0.2*LINER.settings.scoresize;
+					mysc.svgelem.tail.circle(LINER.settings.scoresize/3).center(cx,tys+4).fill('black').opacity(1);
 				}
 				
 			
