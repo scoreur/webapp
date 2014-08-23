@@ -196,6 +196,7 @@ WAVGEN={
 	}
 }
 WAVGEN_NEW={
+	use_regular_waveform_data:0,
 	sampleps:44100,
 	pack:function(p){
 		var plateau_start=0.1;
@@ -265,7 +266,7 @@ WAVGEN_NEW={
 			});
 		}
 	},
-	saveScoreSequence:function(){},//download data?
+	_scoreBufferCache:[],//to be implemented
 	generateScoreSequencePlayer:function(unit_ms,scores,waveform,callback){
 		var unit_time=unit_ms/1000;//translate to second
 		var buffers=[];
@@ -326,6 +327,37 @@ WAVGEN_NEW={
 		return output_buffer;*/
 		
 		
+	},
+	generateScoreSequencesPlayer:function(unit_ms,chorus,callback)
+	{
+		var players=[];
+		var q=new QUEUE(function(){
+			console.log('ss all finished',players);	
+			callback(function(){
+				players.map(function(p){p();});	
+			});
+		});
+		for(var i=0;i<chorus.length;i++)
+		{
+			var instrument=chorus[i];
+			var taskFinished=q.newTask();
+			var done=function(p){
+				players.push(p);
+				taskFinished();
+			}
+			this.generateScoreSequencePlayer(unit_ms,instrument[1],instrument[2],done);
+		}
+	},
+	RENDER:function(data,callback){
+	},
+	PLAY:function(data){
+	
+		var unit_ms=data.time_unit/48;
+		if(this.use_regular_waveform_data)
+			for(var i=0;i<data.chorus.length;i++)
+				if(WAVEFORM[data.chorus[i][0]])
+					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
+		this.generateScoreSequencesPlayer(unit_ms,data.chorus,function(s){s();});
 	},
 	sourceNodes:[],
 	gainNodes:[],
