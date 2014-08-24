@@ -207,7 +207,7 @@ LINER={
 					frnum:score.frnum
 				};
 				mysc.svgelem=elem.newnote(mysc.duration);
-				mysc._svgelem=elem.svg.rect(10,30).stroke('red').fill('yellow');
+				mysc._svgelem=elem.svg.rect(10,30).opacity(0);
 				mysc._svgelem.mysc=mysc;
 				mysc._svgelem.on('mousemove',LINER.mouse_handlers.move);
 				mysc._svgelem.on('mouseup',LINER.mouse_handlers.up);
