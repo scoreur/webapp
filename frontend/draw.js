@@ -2,7 +2,7 @@ LINER={
 	lines:[],
 	settings:{
 		lineheight:12,
-		scorewidth:22,
+		scorewidth:22+6,
 		scoresize:16,
 		tailsize:20,
 		beatsperseq:8,
@@ -235,9 +235,10 @@ LINER={
 					case 3:
 					case 6:
 						var cx=LINER.x_conversion(time)
-						+0.8*LINER.settings.scorewidth
-						+0.2*LINER.settings.scoresize;
-						mysc.svgelem.tail.circle(LINER.settings.scoresize/3).center(cx,tys+4).fill('black').opacity(1);
+						+0.9*LINER.settings.scorewidth
+						+0.1*LINER.settings.scoresize;
+						var cy=LINER.y_conversion(0.5+Math.floor(line));
+						mysc.svgelem.tail.circle(LINER.settings.scoresize/3).center(cx,cy).fill('black').opacity(1);
 					break;
 				}
 				if(mysc.duration<=6)
