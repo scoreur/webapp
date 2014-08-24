@@ -48,8 +48,18 @@ LINER={
 		elem.svg.upper=elem.svg.nested();
 		elem.svg.lower=elem.svg.nested();
 		elem.svg.lower.cy(LINER.settings.extra_vertical_spacing);
-		img=elem.svg.lower.image('./resources/staff/bass_clef.png').size(50,50).center(LINER.settings.clef_x_offset,LINER.y_conversion(-3)+6);
-		img=elem.svg.upper.image('./resources/staff/treble_clef.png').size(50,50).center(LINER.settings.clef_x_offset,LINER.y_conversion(3));
+		
+		elem.svg.upper.cx(20);
+		elem.svg.lower.cx(20);
+		var bracket_y=LINER.y_conversion(0)+LINER.settings.extra_vertical_spacing/2;
+		var bracket_size=LINER.y_conversion(-6)-LINER.y_conversion(6)+LINER.settings.extra_vertical_spacing;
+		bracket_img=elem.svg.image('./resources/staff/bracket.png').size(bracket_size,bracket_size).center(10,bracket_y);
+		bracket_line=elem.svg.line(20,LINER.y_conversion(5),20,LINER.y_conversion(-5)+LINER.settings.extra_vertical_spacing).stroke('black');
+		
+		var bcf=4*LINER.settings.lineheight;
+		var tcf=8*LINER.settings.lineheight;
+		img=elem.svg.lower.image('./resources/staff/bass_clef.png').size(bcf,bcf).center(LINER.settings.clef_x_offset,LINER.y_conversion(-2.5));
+		img=elem.svg.upper.image('./resources/staff/treble_clef.png').size(tcf,tcf).center(LINER.settings.clef_x_offset,LINER.y_conversion(3));
 		
 		elem.svg.upper.tails=elem.svg.upper.nested();
 		elem.svg.lower.tails=elem.svg.lower.nested();
@@ -185,7 +195,7 @@ LINER={
 						+LINER.settings.scoresize
 					)/2;
 					tys=LINER.y_conversion(line);
-					tye=LINER.y_conversion(5-spacing);
+					//tye=LINER.y_conversion(5-spacing);
 				}
 				else if(line>3){//lower left
 					tx=LINER.x_conversion(time)+(
@@ -193,7 +203,7 @@ LINER={
 						-LINER.settings.scoresize
 					)/2;
 					tys=LINER.y_conversion(line);
-					tye=LINER.y_conversion(1+spacing);
+					//tye=LINER.y_conversion(1+spacing);
 				}
 				else if(line<-3){//upper right
 					isup=1;
@@ -202,7 +212,7 @@ LINER={
 						+LINER.settings.scoresize
 					)/2;
 					tys=LINER.y_conversion(line);
-					tye=LINER.y_conversion(-1-spacing);
+					//tye=LINER.y_conversion(-1-spacing);
 				}
 				else if(line<0&&line>=-3){//lower left
 					tx=LINER.x_conversion(time)+(
@@ -210,8 +220,9 @@ LINER={
 						-LINER.settings.scoresize
 					)/2;
 					tys=LINER.y_conversion(line);
-					tye=LINER.y_conversion(-5+spacing);
+					//tye=LINER.y_conversion(-5+spacing);
 				}
+				tye=tys+3.5*LINER.settings.lineheight*(isup?-1:1);
 				
 				mysc.svgelem.tail=mysc.svgelem.parent.tails.nested();
 				switch(mysc.duration){
