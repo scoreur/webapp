@@ -4,12 +4,14 @@ window.WAVEFORM={
 	sine:[1]
 }
 MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
-	float32tomp3:function(buff)
+	float32tomp3:function(buff,sampleps)
 		{
+			if(!sampleps)sampleps=44100;
+			console.log('encoding mp3 sps:',sampleps,' time:',buff.length/sampleps);
 			var data=[];
 			var mp3codec=Lame.init();
-			Lame.set_in_samplerate(mp3codec,44100);
-			Lame.set_out_samplerate(mp3codec,44100);
+			Lame.set_in_samplerate(mp3codec,sampleps);
+			Lame.set_out_samplerate(mp3codec,22050);
 			Lame.set_num_channels(mp3codec,2);
 			Lame.set_mode(mp3codec,Lame.JOINT_STEREO);
 			//Lame.set_num_channels(mp3codec,1);
@@ -20,15 +22,15 @@ MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
 			
 			var blocksize=8192;
 			var slices=Math.floor(buff.length/blocksize);
+			var empty=new Float32Array(blocksize);
 			for(var i=0;i<slices;i++)
 			{
-				console.log('encoding:',Math.floor(i*blocksize/buff.length*100)+'%');
 				var block=buff.subarray(blocksize*i,blocksize*(i+1));
-				var datum=Lame.encode_buffer_ieee_float(mp3codec,block,block);
+				var datum=Lame.encode_buffer_ieee_float(mp3codec,block,empty);
 				data.push(datum);
 			}
 			var block=buff.subarray(blocksize*slices,buff.length);
-			var datum=Lame.encode_buffer_ieee_float(mp3codec,block,block);
+			var datum=Lame.encode_buffer_ieee_float(mp3codec,block,empty);
 			data.push(datum);
 			datum=Lame.encode_flush(mp3codec);
 			data.push(datum);
@@ -51,8 +53,8 @@ MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
 				out[i]=dv.getInt16(i*2,1)/32768.0;
 			return out;
 		},
-	wavbuff2mp3:function(file){
-			return this.float32tomp3(wavbuff2float32(file));
+	wavbuff2mp3:function(file,sampleps){
+			return this.float32tomp3(wavbuff2float32(file),sampleps);
 		}
 }
 
@@ -283,11 +285,19 @@ WAVGEN={
 			return calc.apply(_this);
 		}
 	},
-	SAVE:function(data,filename){
+	SAVE_WAV:function(data,filename){
 		if(!filename)filename="scores";
 		if(!/\.wav$/.test(filename))filename+='.wav';
 		var bin=this.RENDER_WAV(data);
 		var blob=new Blob([bin],{type:"audio/wav"});
+		setTimeout(function(){saveAs(blob,filename);},0);
+	},
+	SAVE_MP3:function(data,filename){
+		if(!filename)filename="scores";
+		if(!/\.mp3$/.test(filename))filename+='.mp3';
+		var f32data=this.RENDER_F32(data);
+		var bin=MP3ENCODE.float32tomp3(f32data,this.sampleps);
+		var blob=new Blob([bin],{type:"audio/mp3"});
 		setTimeout(function(){saveAs(blob,filename);},0);
 	},
 	PLAY:function(data){
@@ -543,10 +553,11 @@ WAVGEN_NEW={
 		return this.warning;
 	},
 	SAVE_MP3:function(data,filename){
+		var sampleps=this.sampleps;
 		if(!filename)filename="scores";
 		if(!/\.mp3$/.test(filename))filename+='.mp3';
 		this.RENDER_F32(data,function(f32data){
-			var bin=MP3ENCODE.float32tomp3(f32data);
+			var bin=MP3ENCODE.float32tomp3(f32data,sampleps);
 			var blob=new Blob([bin],{type:"audio/mp3"});
 			saveAs(blob,filename);
 		});
