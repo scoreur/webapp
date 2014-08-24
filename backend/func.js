@@ -189,7 +189,7 @@ WAVGEN={
 		}
 		return output_buffer;
 	},
-	RENDER:function(data,callback){
+	RENDER_WAV:function(data,callback){
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
 			for(var i=0;i<data.chorus.length;i++)
@@ -197,15 +197,47 @@ WAVGEN={
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus,callback);
 	},
+	RENDER_F32:function(data,callback){
+		var unit_ms=data.time_unit/48;
+		if(this.use_regular_waveform_data)
+			for(var i=0;i<data.chorus.length;i++)
+				if(WAVEFORM[data.chorus[i][0]])
+					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
+		var _this=this;
+		function calc()
+		{
+			var file=this.saveScoreSequences_rawbuffer(unit_ms,data.chorus);
+			var dv=new DataView(file,44), samplecnt=(file.byteLength-44)/2;
+			var out=new Float32Array(samplecnt);
+			for(var i=0;i<samplecnt;i++)
+				out[i]=dv.getInt16(i*2,1)/32768.0;
+			if(callback)
+			{
+				setTimeout(function(){callback(out);},0);
+				return this.use_callback;
+			}
+			else return out;
+		}
+		if(typeof callback=='function'){
+			setTimeout(function(){
+				calc.apply(_this);
+			},0);
+			return this.use_callback;
+		}
+		else{
+			callback=false;
+			return calc.apply(_this);
+		}
+	},
 	SAVE:function(data,filename){
 		if(!filename)filename="scores";
 		if(!/\.wav$/.test(filename))filename+='.wav';
-		var bin=this.RENDER(data);
+		var bin=this.RENDER_WAV(data);
 		var blob=new Blob([bin],{type:"audio/wav"});
 		setTimeout(function(){saveAs(blob,filename);},0);
 	},
 	PLAY:function(data){
-		var buffer=this.RENDER(data);
+		var buffer=this.RENDER_WAV(data);
 		try{
 			var src=this.buffer2blobsrc(buffer);
 		}
