@@ -42,7 +42,7 @@ MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
 				ptr+=slice_arr.length;
 			}
 			return output_buffer;
-		} 	
+		},
 	wavbuff2float32:function(file)
 		{
 			var dv=new DataView(file,44), samplecnt=(file.byteLength-44)/2;
@@ -50,7 +50,7 @@ MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
 			for(var i=0;i<samplecnt;i++)
 				out[i]=dv.getInt16(i*2,1)/32768.0;
 			return out;
-		}
+		},
 	wavbuff2mp3:function(file){
 			return this.float32tomp3(wavbuff2float32(file));
 		}
