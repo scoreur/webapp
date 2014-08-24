@@ -36,11 +36,52 @@ LINER={
 	{
 		return LINER.settings.initial_padding+LINER.settings.scorewidth*time;
 	},
+	inverse_y_conversion_raw:function(y){
+		return LINER.settings.top_line-(y/LINER.settings.lineheight);
+	},
+	inverse_y_conversion:function(y){
+		var line_num=LINER.inverse_y_conversion_raw(y);
+		return Math.round(line_num*2)/2;
+	},
+	inverse_line_conversion:function(line){
+		var eig=0;
+		while(line>=3.5){line-=3.5;eig++;}
+		while(line<0){line+=3.5;eig--;}
+		var linepos2frnum=[0,2,4,5,7,9,11];
+		return 12*eig+39+linepos2frnum[line*2];
+	},
+	SVG_transxy:function(node,ex,ey){  
+		var p=elem.svg.node.createSVGPoint();
+		p.x=ex;p.y=ey;
+		var m=node.getScreenCTM();
+		p=p.matrixTransform(m.inverse());
+		return [p.x,p.y];
+	},
+	mouse_handlers:{
+		up:function(evt){
+			window._mousedown=false;
+		},
+		down:function(evt){
+			window._mousedown=true;
+		},
+		move:function(evt){//only process mouse dragging;
+			if(!window._mousedown)return;
+			var mysc=evt.target.instance.mysc;
+			var c=LINER.SVG_transxy(evt.target,evt.x,evt.y);
+			var line=LINER.inverse_y_conversion(c[1]);
+			var frnum=LINER.inverse_line_conversion(line);
+			//play sound? todo
+			mysc.moveTo(mysc.time,frnum);
+		}
+	},
+	//touch handlers:{},
 	initialize:function(elem)
 	{
 		if(typeof elem == "string")
 			elem=document.getElementById(elem);
 		if(!elem)return;
+		elem.onmousedown=LINER.mouse_handlers.down;
+		elem.onmouseup=LINER.mouse_handlers.up;
 		
 		var lineend=LINER.settings.initial_padding+LINER.settings.scorewidth*LINER.settings.beatsperseq*LINER.settings.seqperline;
 		
@@ -143,6 +184,9 @@ LINER={
 					frnum:score.frnum
 				};
 				mysc.svgelem=elem.newnote(mysc.duration);
+				mysc.svgelem.mysc=mysc;
+				mysc.svgelem.on('mousemove',LINER.mouse_handlers.move);
+				
 				mysc.moveTo=function(time,frnum){
 					mysc.time=time;mysc.frnum=frnum;
 					var line=LINER.line_conversion(frnum);
