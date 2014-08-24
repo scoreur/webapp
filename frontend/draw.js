@@ -39,6 +39,10 @@ LINER={
 	inverse_y_conversion_raw:function(y){
 		return LINER.settings.top_line-(y/LINER.settings.lineheight);
 	},
+	inverse_x_conversion:function(x)
+	{
+		return Math.floor((x-LINER.settings.initial_padding)/LINER.settings.scorewidth);
+	},
 	inverse_y_conversion:function(y){
 		var line_num=LINER.inverse_y_conversion_raw(y);
 		return Math.round(line_num*2)/2;
@@ -72,16 +76,25 @@ LINER={
 		down:function(evt){
 			var rect=evt.target.instance;
 			var ox=rect.cx(), oy=rect.cy();
-			rect.size(30,LINER.settings.extra_vertical_spacing).cx(ox).cy(oy);
+			rect.size(LINER.settings.scorewidth*2,LINER.settings.extra_vertical_spacing).cx(ox).cy(oy);
 		},
-		move:function(evt){//only process mouse dragging;
+		move:function(evt){//only process mouse dragging; todo: touch dragging?
 			if(!window._mousedown)return;
 			var mysc=evt.target.instance.mysc;
+			if(evt.button==1){
+				//scroll button: todo: change duration?
+			}
+			
 			var c=LINER.SVG_transxy(evt.target,evt.x,evt.y);
 			var line=LINER.inverse_y_conversion(c[1]);
 			var frnum=LINER.inverse_line_conversion(line);
+			
+			var ntime=mysc.time;
+			if(evt.button>=2){
+				ntime=LINER.inverse_x_conversion(c[0]);
+			}
 			//play sound? todo
-			mysc.moveTo(mysc.time,frnum);
+			mysc.moveTo(ntime,frnum);
 		}
 	},
 	//touch handlers:{},
