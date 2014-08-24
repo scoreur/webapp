@@ -3,7 +3,64 @@ window.WAVEFORM={
 	smule:[1,0.5],
 	sine:[1]
 }
+MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
+	float32tomp3:function(buff,sampleps)
+		{
+			if(!sampleps)sampleps=44100;
+			console.log('encoding mp3 sps:',sampleps,' time:',buff.length/sampleps);
+			var data=[];
+			var mp3codec=Lame.init();
+			Lame.set_in_samplerate(mp3codec,sampleps);
+			Lame.set_out_samplerate(mp3codec,22050);
+			Lame.set_num_channels(mp3codec,2);
+			Lame.set_mode(mp3codec,Lame.JOINT_STEREO);
+			//Lame.set_num_channels(mp3codec,1);
+			//Lame.set_mode(mp3codec,Lame.MONO);
+			//Lame.set_num_samples(buff.length);
+			Lame.set_bitrate(mp3codec,128);
+			Lame.init_params(mp3codec);
+			
+			var blocksize=8192;
+			var slices=Math.floor(buff.length/blocksize);
+			var empty=new Float32Array(blocksize);
+			for(var i=0;i<slices;i++)
+			{
+				var block=buff.subarray(blocksize*i,blocksize*(i+1));
+				var datum=Lame.encode_buffer_ieee_float(mp3codec,block,empty);
+				data.push(datum);
+			}
+			var block=buff.subarray(blocksize*slices,buff.length);
+			var datum=Lame.encode_buffer_ieee_float(mp3codec,block,empty);
+			data.push(datum);
+			datum=Lame.encode_flush(mp3codec);
+			data.push(datum);
+			
+			var totalsize=data.map(function(d){return d.size;}).reduce(function(a,b){return a+b;});
+			var output_buffer=new ArrayBuffer(totalsize),output_array=new Uint8Array(output_buffer);
+			var ptr=0;
+			for(var i=0;i<data.length;i++){
+				var slice_arr=output_array.subarray(ptr,ptr+data[i].size);
+				slice_arr.set(data[i].data);
+				ptr+=slice_arr.length;
+			}
+			return output_buffer;
+		},
+	wavbuff2float32:function(file)
+		{
+			var dv=new DataView(file,44), samplecnt=(file.byteLength-44)/2;
+			var out=new Float32Array(samplecnt);
+			for(var i=0;i<samplecnt;i++)
+				out[i]=dv.getInt16(i*2,1)/32768.0;
+			return out;
+		},
+	wavbuff2mp3:function(file,sampleps){
+			return this.float32tomp3(wavbuff2float32(file),sampleps);
+		}
+}
+
+
 WAVGEN={
+	use_callback:"WARNING: a callback function is detected and data has been forwarded.",
 	use_regular_waveform_data:0,//replace waveform data by database data
 	sampleps:44100,
 	wavSize:16,//2 bytes per sample
@@ -92,7 +149,8 @@ WAVGEN={
 		return "data:audio/wav;base64,"+b64;
 	},
 	buffer2blobsrc:function(buffer){
-		//faster implementation with blob url
+		var blob=new Blob([buffer],{type:"audio/wav"});
+		return URL.createObjectURL(blob);
 	},
 	//Read the scores and save into wav file.
 	/*
@@ -113,7 +171,7 @@ WAVGEN={
 		]
 	}
 	*/
-	generateScoreSequence_rawbuffer:function(unit_ms,scores,waveform)
+	generateScoreSequence_rawbuffer:function(unit_ms,scores,waveform,callback)
 	{	
 		unit_ms/=1000;//translate to second
 		if(!waveform || waveform.length<=1)waveform=[1];
@@ -142,9 +200,16 @@ WAVGEN={
 			}
 		}
 		this.writeRIFFHeader(output_buffer);
+		
+		if(typeof callback=='function'){
+			setTimeout(function(){
+				callback(output_buffer);
+			},0);
+			return this.use_callback;
+		}
 		return output_buffer;
 	},
-	saveScoreSequences_rawbuffer:function(unit_ms,chorus)
+	saveScoreSequences_rawbuffer:function(unit_ms,chorus,callback)
 	{
 		var buffers=[];
 		for(var i=0;i<chorus.length;i++)
@@ -170,20 +235,80 @@ WAVGEN={
 			console.log(output_buffer.byteLength,buffers[i].byteLength,(buffers[i].byteLength)/2-22);
 			this.dvinc_Int16(output_dv,instrument_dv,(buffers[i].byteLength)/2-22);
 		}
-		
 		this.writeRIFFHeader(output_buffer);
+		
+		if(typeof callback=='function'){
+			setTimeout(function(){
+				callback(output_buffer);
+			},0);
+			return this.use_callback;
+		}
 		return output_buffer;
 	},
-	RENDER:function(data){
+	RENDER_WAV:function(data,callback){
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
 			for(var i=0;i<data.chorus.length;i++)
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
-		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus);
+		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus,callback);
+	},
+	RENDER_F32:function(data,callback){
+		var unit_ms=data.time_unit/48;
+		if(this.use_regular_waveform_data)
+			for(var i=0;i<data.chorus.length;i++)
+				if(WAVEFORM[data.chorus[i][0]])
+					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
+		var _this=this;
+		function calc()
+		{
+			var file=this.saveScoreSequences_rawbuffer(unit_ms,data.chorus);
+			var dv=new DataView(file,44), samplecnt=(file.byteLength-44)/2;
+			var out=new Float32Array(samplecnt);
+			for(var i=0;i<samplecnt;i++)
+				out[i]=dv.getInt16(i*2,1)/32768.0;
+			if(callback)
+			{
+				setTimeout(function(){callback(out);},0);
+				return this.use_callback;
+			}
+			else return out;
+		}
+		if(typeof callback=='function'){
+			setTimeout(function(){
+				calc.apply(_this);
+			},0);
+			return this.use_callback;
+		}
+		else{
+			callback=false;
+			return calc.apply(_this);
+		}
+	},
+	SAVE_WAV:function(data,filename){
+		if(!filename)filename="scores";
+		if(!/\.wav$/.test(filename))filename+='.wav';
+		var bin=this.RENDER_WAV(data);
+		var blob=new Blob([bin],{type:"audio/wav"});
+		setTimeout(function(){saveAs(blob,filename);},0);
+	},
+	SAVE_MP3:function(data,filename){
+		if(!filename)filename="scores";
+		if(!/\.mp3$/.test(filename))filename+='.mp3';
+		var f32data=this.RENDER_F32(data);
+		var bin=MP3ENCODE.float32tomp3(f32data,this.sampleps);
+		var blob=new Blob([bin],{type:"audio/mp3"});
+		setTimeout(function(){saveAs(blob,filename);},0);
 	},
 	PLAY:function(data){
-		var src=this.buffer2b64src(this.RENDER(data));
+		var buffer=this.RENDER_WAV(data);
+		try{
+			var src=this.buffer2blobsrc(buffer);
+		}
+		catch(e)
+		{
+			var src=this.buffer2b64src(buffer);
+		}
 		var el=document.createElement('audio');
 		el.onended=function(){
 			el.src='';
@@ -198,6 +323,8 @@ WAVGEN={
 WAVGEN_NEW={
 	use_regular_waveform_data:0,
 	sampleps:44100,
+	warning:"WARNING: YOU SHOULD NOT SEE THIS.\nThis function is asynchronous, please use a callback function to obtain the returning data.",
+	nocallback:"ERROR: You should provide a callback function to receive returning data.",
 	pack:function(p){
 		var plateau_start=0.1;
 		var plateau_end=0.7;
@@ -216,6 +343,7 @@ WAVGEN_NEW={
 		return ctx;
 	})(),
 	generateSingleScore:function(amplitude,freq,second,callback){
+		if(typeof callback!='function')throw this.nocallback;
 		var pack=this.pack;
 		var octx=new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1,this.sampleps*second,this.sampleps);
 		var g=octx.createGain();
@@ -235,8 +363,10 @@ WAVGEN_NEW={
 			callback(d.renderedBuffer);
 		};
 		octx.startRendering();
+		return this.warning;
 	},
 	generateSingleScore_waveform:function(amplitude,freq,second,waveform,callback){
+		if(typeof callback!='function')throw this.nocallback;
 		if(!waveform || waveform.length<=1)waveform=[1];
 		var buffers=[];
 		var q=new QUEUE(function(){
@@ -265,9 +395,11 @@ WAVGEN_NEW={
 				taskfinished();
 			});
 		}
+		return this.warning;
 	},
 	_scoreBufferCache:{},
 	generateScoreSequencePlayer:function(unit_ms,scores,waveform,callback){
+		if(typeof callback!='function')throw this.nocallback;
 		var unit_time=unit_ms/1000;//translate to second
 		if(waveform.join)
 		{
@@ -316,28 +448,10 @@ WAVGEN_NEW={
 			}
 		}
 		setTimeout(q.newTask(),1);//fire with empty queue!
-		/*
-		
-		for(var i=0;i<scores.length;i++)
-		{
-			var hz=scores[i][2], start=Math.floor(unit_sample*scores[i][0]), duration=Math.floor(unit_sample*scores[i][1]);
-			console.log('scorer sd:',start,duration);
-			for(var wfi=0;wfi<waveform.length;wfi++)
-			if(waveform[wfi]>0)
-			{
-				var note=this.generateSingleScore(this.amplitude*waveform[wfi],hz*(wfi+1),duration);
-				var contentdv=new DataView(output_buffer,start*2);
-				var wavedv=new DataView(note);
-				this.dvinc_Int16(contentdv,wavedv,duration);
-			}
-		}
-		this.writeRIFFHeader(output_buffer);
-		return output_buffer;*/
-		
-		
+		return this.warning;
 	},
-	generateScoreSequencesPlayer:function(unit_ms,chorus,callback)
-	{
+	generateScoreSequencesPlayer:function(unit_ms,chorus,callback){
+		if(typeof callback!='function')throw this.nocallback;
 		var ssplayers=[];
 		var q=new QUEUE(function(){
 			console.log('ss all finished',ssplayers);	
@@ -355,17 +469,108 @@ WAVGEN_NEW={
 			}
 			this.generateScoreSequencePlayer(unit_ms,instrument[1],instrument[2],done);
 		}
+		return this.warning;
 	},
-	RENDER:function(data,callback){
+	writeRIFFHeader:function(buffer){
+		var headdv=new DataView(buffer);
+		var contentlength=buffer.byteLength-44;
+		var riff_header="52494646FFFFFFFF57415645666D7420100000000100010044AC000010B102000200100064617461FFFFFFFF".match(/../g).map(function(s){return parseInt(s,16);});
+		for(var i=0;i<44;i++)
+			headdv.setUint8(i,riff_header[i]);
+		headdv.setUint32(40,contentlength,true);
+		headdv.setUint32(4,contentlength+36,true);
+		delete headdv;
 	},
-	PLAY:function(data){
-	
+	audioBuffer2wav:function(f32data){//Only for mono; stereo to be implemented.
+		var bin=new ArrayBuffer(44+f32data.length*2), dv=new DataView(bin,44);
+		for(var i=0;i<f32data.length;i++)
+			dv.setInt16(i*2,Math.floor(32768*f32data[i]),1);
+		this.writeRIFFHeader(bin);
+		return bin;
+	},
+	saveScoreSequences_rawbufferWAV:function(unit_ms,chorus,callback){
+		var _this=this;
+		this.saveScoreSequences_rawbufferF32(unit_ms,chorus,function(f32){		
+			var d=_this.audioBuffer2wav.apply(_this,[f32]);
+			callback(d);
+		});
+	},
+	saveScoreSequences_rawbufferF32:function(unit_ms,chorus,callback){
+		if(typeof callback!='function')throw this.nocallback;
+		var max_time=0;
+		for(var i=0;i<chorus.length;i++)
+		{
+			var scores=chorus[i][1];
+			scores.map(function(s){
+				if(s[0]+s[1]>max_time)
+					max_time=s[0]+s[1];
+			});
+		}
+		console.log('creating octx:',1,this.sampleps*unit_ms/1000*max_time,this.sampleps);
+		var octx=new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1,this.sampleps*unit_ms/1000*max_time,this.sampleps);
+		this._lctx=this.ctx;
+		this.ctx=octx;
+		var ctx_recovery=(function(_this){return function(){
+			_this.ctx=_this._lctx;
+		}})(this);
+		this.generateScoreSequencesPlayer(unit_ms,chorus,function(p){
+			p();
+			octx.oncomplete=function(d){
+				if(!d.returnValue)throw "Octx generation error";
+				var buffer=d.renderedBuffer;
+				ctx_recovery();
+				callback(buffer.getChannelData(0));
+			}
+			octx.startRendering();
+		});
+		return this.warning;
+	},
+	RENDER_WAV:function(data,callback){
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
 			for(var i=0;i<data.chorus.length;i++)
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
-		this.generateScoreSequencesPlayer(unit_ms,data.chorus,function(s){s();});
+		this.saveScoreSequences_rawbufferWAV(unit_ms,data.chorus,callback);
+		return this.warning;
+	},
+	RENDER_F32:function(data,callback){
+		var unit_ms=data.time_unit/48;
+		if(this.use_regular_waveform_data)
+			for(var i=0;i<data.chorus.length;i++)
+				if(WAVEFORM[data.chorus[i][0]])
+					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
+		this.saveScoreSequences_rawbufferF32(unit_ms,data.chorus,callback);
+		return this.warning;
+	},
+	SAVE_WAV:function(data,filename){
+		if(!filename)filename="scores";
+		if(!/\.wav$/.test(filename))filename+='.wav';
+		this.RENDER_WAV(data,function(bin){
+			var blob=new Blob([bin],{type:"audio/wav"});
+			saveAs(blob,filename);
+		});
+		return this.warning;
+	},
+	SAVE_MP3:function(data,filename){
+		var sampleps=this.sampleps;
+		if(!filename)filename="scores";
+		if(!/\.mp3$/.test(filename))filename+='.mp3';
+		this.RENDER_F32(data,function(f32data){
+			var bin=MP3ENCODE.float32tomp3(f32data,sampleps);
+			var blob=new Blob([bin],{type:"audio/mp3"});
+			saveAs(blob,filename);
+		});
+		return this.warning;
+	},
+	PLAY:function(data){
+		var playnow=function(s){s();}
+		var unit_ms=data.time_unit/48;
+		if(this.use_regular_waveform_data)
+			for(var i=0;i<data.chorus.length;i++)
+				if(WAVEFORM[data.chorus[i][0]])
+					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
+		this.generateScoreSequencesPlayer(unit_ms,data.chorus,playnow);
 	}
 }
 WAVPLAY={
