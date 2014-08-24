@@ -92,7 +92,8 @@ WAVGEN={
 		return "data:audio/wav;base64,"+b64;
 	},
 	buffer2blobsrc:function(buffer){
-		//faster implementation with blob url
+		var blob=new Blob(buffer,{type:"audio/wav"});
+		return URL.createObjectURL(blob);
 	},
 	//Read the scores and save into wav file.
 	/*
