@@ -323,6 +323,8 @@ WAVGEN={
 WAVGEN_NEW={
 	use_regular_waveform_data:0,
 	sampleps:44100,
+	amplitude:1,
+	wav_amplitude:3000,
 	warning:"WARNING: YOU SHOULD NOT SEE THIS.\nThis function is asynchronous, please use a callback function to obtain the returning data.",
 	nocallback:"ERROR: You should provide a callback function to receive returning data.",
 	pack:function(p){
@@ -485,7 +487,7 @@ WAVGEN_NEW={
 	audioBuffer2wav:function(f32data){//Only for mono; stereo to be implemented.
 		var bin=new ArrayBuffer(44+f32data.length*2), dv=new DataView(bin,44);
 		for(var i=0;i<f32data.length;i++)
-			dv.setInt16(i*2,Math.floor(32768*f32data[i]),1);
+			dv.setInt16(i*2,Math.floor(this.wav_amplitude*f32data[i]),1);
 		this.writeRIFFHeader(bin);
 		return bin;
 	},
