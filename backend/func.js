@@ -213,6 +213,8 @@ WAVGEN={
 WAVGEN_NEW={
 	use_regular_waveform_data:0,
 	sampleps:44100,
+	warning:"WARNING: YOU SHOULD NOT SEE THIS.\nThis function is asynchronous, please use a callback function to obtain the returning data.",
+	nocallback:"ERROR: You should provide a callback function to receive returning data.",
 	pack:function(p){
 		var plateau_start=0.1;
 		var plateau_end=0.7;
@@ -231,6 +233,7 @@ WAVGEN_NEW={
 		return ctx;
 	})(),
 	generateSingleScore:function(amplitude,freq,second,callback){
+		if(typeof callback!='function')throw this.nocallback;
 		var pack=this.pack;
 		var octx=new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1,this.sampleps*second,this.sampleps);
 		var g=octx.createGain();
@@ -250,8 +253,10 @@ WAVGEN_NEW={
 			callback(d.renderedBuffer);
 		};
 		octx.startRendering();
+		return this.warning;
 	},
 	generateSingleScore_waveform:function(amplitude,freq,second,waveform,callback){
+		if(typeof callback!='function')throw this.nocallback;
 		if(!waveform || waveform.length<=1)waveform=[1];
 		var buffers=[];
 		var q=new QUEUE(function(){
@@ -280,9 +285,11 @@ WAVGEN_NEW={
 				taskfinished();
 			});
 		}
+		return this.warning;
 	},
 	_scoreBufferCache:{},
 	generateScoreSequencePlayer:function(unit_ms,scores,waveform,callback){
+		if(typeof callback!='function')throw this.nocallback;
 		var unit_time=unit_ms/1000;//translate to second
 		if(waveform.join)
 		{
@@ -331,28 +338,10 @@ WAVGEN_NEW={
 			}
 		}
 		setTimeout(q.newTask(),1);//fire with empty queue!
-		/*
-		
-		for(var i=0;i<scores.length;i++)
-		{
-			var hz=scores[i][2], start=Math.floor(unit_sample*scores[i][0]), duration=Math.floor(unit_sample*scores[i][1]);
-			console.log('scorer sd:',start,duration);
-			for(var wfi=0;wfi<waveform.length;wfi++)
-			if(waveform[wfi]>0)
-			{
-				var note=this.generateSingleScore(this.amplitude*waveform[wfi],hz*(wfi+1),duration);
-				var contentdv=new DataView(output_buffer,start*2);
-				var wavedv=new DataView(note);
-				this.dvinc_Int16(contentdv,wavedv,duration);
-			}
-		}
-		this.writeRIFFHeader(output_buffer);
-		return output_buffer;*/
-		
-		
+		return this.warning;
 	},
-	generateScoreSequencesPlayer:function(unit_ms,chorus,callback)
-	{
+	generateScoreSequencesPlayer:function(unit_ms,chorus,callback){
+		if(typeof callback!='function')throw this.nocallback;
 		var ssplayers=[];
 		var q=new QUEUE(function(){
 			console.log('ss all finished',ssplayers);	
@@ -370,6 +359,7 @@ WAVGEN_NEW={
 			}
 			this.generateScoreSequencePlayer(unit_ms,instrument[1],instrument[2],done);
 		}
+		return this.warning;
 	},
 	writeRIFFHeader:function(buffer){
 		var headdv=new DataView(buffer);
@@ -390,8 +380,7 @@ WAVGEN_NEW={
 		return bin;
 	},
 	saveScoreSequences_rawbuffer:function(unit_ms,chorus,callback){
-		//use offline rendering to save stuff.
-		//consider alter ctx directly?
+		if(typeof callback!='function')throw this.nocallback;
 		var max_time=0;
 		for(var i=0;i<chorus.length;i++)
 		{
@@ -422,6 +411,7 @@ WAVGEN_NEW={
 			}
 			octx.startRendering();
 		});
+		return this.warning;
 	},
 	RENDER:function(data,callback){
 		var unit_ms=data.time_unit/48;
@@ -430,6 +420,7 @@ WAVGEN_NEW={
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		this.saveScoreSequences_rawbuffer(unit_ms,data.chorus,callback);
+		return this.warning;
 	},
 	SAVE:function(data,filename){
 		if(!filename)filename="scores";
@@ -438,6 +429,7 @@ WAVGEN_NEW={
 			var blob=new Blob([bin],{type:"audio/wav"});
 			saveAs(blob,filename);
 		});
+		return this.warning;
 	},
 	PLAY:function(data){
 		var playnow=function(s){s();}
