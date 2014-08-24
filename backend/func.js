@@ -22,7 +22,7 @@ MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
 			var slices=Math.floor(buff.length/blocksize);
 			for(var i=0;i<slices;i++)
 			{
-				console.log('encoding:',Math.floor(i*blocksize/buff.length)+'%');
+				console.log('encoding:',Math.floor(i*blocksize/buff.length*100)+'%');
 				var block=buff.subarray(blocksize*i,blocksize*(i+1));
 				var datum=Lame.encode_buffer_ieee_float(mp3codec,block,block);
 				data.push(datum);
