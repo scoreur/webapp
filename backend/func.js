@@ -4,6 +4,7 @@ window.WAVEFORM={
 	sine:[1]
 }
 WAVGEN={
+	use_callback:"WARNING: a callback function is detected and data has been forwarded.",
 	use_regular_waveform_data:0,//replace waveform data by database data
 	sampleps:44100,
 	wavSize:16,//2 bytes per sample
@@ -114,7 +115,7 @@ WAVGEN={
 		]
 	}
 	*/
-	generateScoreSequence_rawbuffer:function(unit_ms,scores,waveform)
+	generateScoreSequence_rawbuffer:function(unit_ms,scores,waveform,callback)
 	{	
 		unit_ms/=1000;//translate to second
 		if(!waveform || waveform.length<=1)waveform=[1];
@@ -143,9 +144,16 @@ WAVGEN={
 			}
 		}
 		this.writeRIFFHeader(output_buffer);
+		
+		if(typeof callback=='function'){
+			setTimeout(function(){
+				callback(output_buffer);
+			},0);
+			return this.use_callback;
+		}
 		return output_buffer;
 	},
-	saveScoreSequences_rawbuffer:function(unit_ms,chorus)
+	saveScoreSequences_rawbuffer:function(unit_ms,chorus,callback)
 	{
 		var buffers=[];
 		for(var i=0;i<chorus.length;i++)
@@ -171,17 +179,23 @@ WAVGEN={
 			console.log(output_buffer.byteLength,buffers[i].byteLength,(buffers[i].byteLength)/2-22);
 			this.dvinc_Int16(output_dv,instrument_dv,(buffers[i].byteLength)/2-22);
 		}
-		
 		this.writeRIFFHeader(output_buffer);
+		
+		if(typeof callback=='function'){
+			setTimeout(function(){
+				callback(output_buffer);
+			},0);
+			return this.use_callback;
+		}
 		return output_buffer;
 	},
-	RENDER:function(data){
+	RENDER:function(data,callback){
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
 			for(var i=0;i<data.chorus.length;i++)
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
-		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus);
+		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus,callback);
 	},
 	SAVE:function(data,filename){
 		if(!filename)filename="scores";
