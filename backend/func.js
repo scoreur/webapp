@@ -382,6 +382,7 @@ WAVPLAY={
 	},
 	sourceNodes:[],
 	gainNodes:[],
+	biquad:false,
 	addFreq:function(hz){
 		if(this.sourceNodes[hz])return this.sourceNodes[hz];
 		var osc=this.ctx.createOscillator();
@@ -410,8 +411,20 @@ WAVPLAY={
 	gradient_delay_1:3,
 	gradient_delay_2:1,
 	score_start:function(frnum,waveform){
+		if(!this.biquad){
+			this.biquad=this.ctx.createBiquadFilter();
+			this.biquad.type = "lowshelf";
+			this.biquad.frequency.value = 130;
+			this.biquad.gain.value = 20;
+			this.biquad2=this.ctx.createBiquadFilter();
+			this.biquad2.type = "lowshelf";
+			this.biquad2.frequency.value = 60;
+			this.biquad2.gain.value = 20;
+			this.biquad.connect(this.biquad2);
+			this.biquad2.connect(this.ctx.destination);
+			}
 		var gain=this.createGain(this.frnum2hz(frnum),waveform);
-		gain.connect(this.ctx.destination);
+		gain.connect(this.biquad);
 		//gain.gain.value=1;//smooth? 
 		gain.gradient_phase=1;
 		var delay=this.gradient_delay_1;
