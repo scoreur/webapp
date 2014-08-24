@@ -64,7 +64,7 @@ WAVGEN={
 	use_regular_waveform_data:0,//replace waveform data by database data
 	sampleps:44100,
 	wavSize:16,//2 bytes per sample
-	amplitude:3000,
+	amplitude:20000,
 	frnum2hz:function(frnum){
 		//440hz = 48
 		frnum-=48;
@@ -401,11 +401,11 @@ WAVGEN_NEW={
 	generateScoreSequencePlayer:function(unit_ms,scores,waveform,callback){
 		if(typeof callback!='function')throw this.nocallback;
 		var unit_time=unit_ms/1000;//translate to second
-		if(waveform.join)
+		if(waveform.join)//isarray
 		{
 			var waveform_index=waveform.join(',');
 			var buffers=this._scoreBufferCache[waveform_index];
-			if(!buffers)buffers=this.	_scoreBufferCache[waveform_index]=[];
+			if(!buffers)buffers=this._scoreBufferCache[waveform_index]=[];
 		}
 		else var buffers=[];
 		
@@ -436,10 +436,11 @@ WAVGEN_NEW={
 			var kwd=hz+'hz,'+Math.floor(duration*1e6)+'us';
 			if(!buffers[kwd])
 			{
+				buffers[kwd]='generating';
 				var done_c=function(taskfinished,kwd){
 					this.done=function(buff){
 						buffers[kwd]=buff;
-						console.log(lastbuff=buff);
+						console.log(lastbuff=buff,kwd);
 						taskfinished();
 					}
 				};
