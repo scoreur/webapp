@@ -184,7 +184,14 @@ WAVGEN={
 		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus);
 	},
 	PLAY:function(data){
-		var src=this.buffer2blobsrc(this.RENDER(data));
+		var buffer=this.RENDER(data);
+		try{
+			var src=this.buffer2blobsrc(buffer);
+		}
+		catch(e)
+		{
+			var src=this.buffer2b64src(buffer);
+		}
 		var el=document.createElement('audio');
 		el.onended=function(){
 			el.src='';
