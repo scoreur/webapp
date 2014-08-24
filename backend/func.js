@@ -417,15 +417,21 @@ WAVGEN_NEW={
 		headdv.setUint32(4,contentlength+36,true);
 		delete headdv;
 	},
-	audioBuffer2wav:function(buffer){//Only for mono; stereo to be implemented.
-		var data=buffer.getChannelData(0);
-		var bin=new ArrayBuffer(44+data.length*2), dv=new DataView(bin,44);
-		for(var i=0;i<data.length;i++)
-			dv.setInt16(i*2,Math.floor(32768*data[i]),1);
+	audioBuffer2wav:function(f32data){//Only for mono; stereo to be implemented.
+		var bin=new ArrayBuffer(44+f32data.length*2), dv=new DataView(bin,44);
+		for(var i=0;i<f32data.length;i++)
+			dv.setInt16(i*2,Math.floor(32768*f32data[i]),1);
 		this.writeRIFFHeader(bin);
 		return bin;
 	},
-	saveScoreSequences_rawbuffer:function(unit_ms,chorus,callback){
+	saveScoreSequences_rawbufferWAV:function(unit_ms,chorus,callback){
+		var _this=this;
+		this.saveScoreSequences_rawbufferF32(unit_ms,chorus,function(f32){		
+			var d=_this.audioBuffer2wav.apply(_this,[f32]);
+			callback(d);
+		});
+	},
+	saveScoreSequences_rawbufferF32:function(unit_ms,chorus,callback){
 		if(typeof callback!='function')throw this.nocallback;
 		var max_time=0;
 		for(var i=0;i<chorus.length;i++)
@@ -443,35 +449,40 @@ WAVGEN_NEW={
 		var ctx_recovery=(function(_this){return function(){
 			_this.ctx=_this._lctx;
 		}})(this);
-		var converter=(function(f,_this){return function(d){
-			return f.apply(_this,[d]);
-		}})(this.audioBuffer2wav,this);
 		this.generateScoreSequencesPlayer(unit_ms,chorus,function(p){
 			p();
 			octx.oncomplete=function(d){
 				if(!d.returnValue)throw "Octx generation error";
 				var buffer=d.renderedBuffer;
 				ctx_recovery();
-				var bin=converter(buffer);
-				callback(bin);
+				callback(buffer.getChannelData(0));
 			}
 			octx.startRendering();
 		});
 		return this.warning;
 	},
-	RENDER:function(data,callback){
+	RENDER_WAV:function(data,callback){
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
 			for(var i=0;i<data.chorus.length;i++)
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
-		this.saveScoreSequences_rawbuffer(unit_ms,data.chorus,callback);
+		this.saveScoreSequences_rawbufferWAV(unit_ms,data.chorus,callback);
 		return this.warning;
 	},
-	SAVE:function(data,filename){
+	RENDER_F32:function(data,callback){
+		var unit_ms=data.time_unit/48;
+		if(this.use_regular_waveform_data)
+			for(var i=0;i<data.chorus.length;i++)
+				if(WAVEFORM[data.chorus[i][0]])
+					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
+		this.saveScoreSequences_rawbufferF32(unit_ms,data.chorus,callback);
+		return this.warning;
+	},
+	SAVE_WAV:function(data,filename){
 		if(!filename)filename="scores";
 		if(!/\.wav$/.test(filename))filename+='.wav';
-		this.RENDER(data,function(bin){
+		this.RENDER_WAV(data,function(bin){
 			var blob=new Blob([bin],{type:"audio/wav"});
 			saveAs(blob,filename);
 		});
