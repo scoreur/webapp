@@ -608,7 +608,7 @@ WAVPLAY={
 		{
 			var intm_gain=this.ctx.createGain();
 			intm_gain.gain.value=waveform[wfi];
-			this.addFreq(hz).connect(intm_gain);
+			this.addFreq(hz*(wfi+1)).connect(intm_gain);
 			intm_gain.connect(out_gain);
 		}
 		return this.gainNodes[kwd]=out_gain;
