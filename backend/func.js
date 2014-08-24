@@ -3,6 +3,60 @@ window.WAVEFORM={
 	smule:[1,0.5],
 	sine:[1]
 }
+MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
+	float32tomp3:function(buff)
+		{
+			var data=[];
+			var mp3codec=Lame.init();
+			Lame.set_in_samplerate(mp3codec,44100);
+			Lame.set_out_samplerate(mp3codec,44100);
+			Lame.set_num_channels(mp3codec,2);
+			Lame.set_mode(mp3codec,Lame.JOINT_STEREO);
+			//Lame.set_num_channels(mp3codec,1);
+			//Lame.set_mode(mp3codec,Lame.MONO);
+			//Lame.set_num_samples(buff.length);
+			Lame.set_bitrate(mp3codec,128);
+			Lame.init_params(mp3codec);
+			
+			var blocksize=8192;
+			var slices=Math.floor(buff.length/blocksize);
+			for(var i=0;i<slices;i++)
+			{
+				console.log('encoding:',Math.floor(i*blocksize/buff.length)+'%');
+				var block=buff.subarray(blocksize*i,blocksize*(i+1));
+				var datum=Lame.encode_buffer_ieee_float(mp3codec,block,block);
+				data.push(datum);
+			}
+			var block=buff.subarray(blocksize*slices,buff.length);
+			var datum=Lame.encode_buffer_ieee_float(mp3codec,block,block);
+			data.push(datum);
+			datum=Lame.encode_flush(mp3codec);
+			data.push(datum);
+			
+			var totalsize=data.map(function(d){return d.size;}).reduce(function(a,b){return a+b;});
+			var output_buffer=new ArrayBuffer(totalsize),output_array=new Uint8Array(output_buffer);
+			var ptr=0;
+			for(var i=0;i<data.length;i++){
+				var slice_arr=output_array.subarray(ptr,ptr+data[i].size);
+				slice_arr.set(data[i].data);
+				ptr+=slice_arr.length;
+			}
+			return output_buffer;
+		} 	
+	wavbuff2float32:function(file)
+		{
+			var dv=new DataView(file,44), samplecnt=(file.byteLength-44)/2;
+			var out=new Float32Array(samplecnt);
+			for(var i=0;i<samplecnt;i++)
+				out[i]=dv.getInt16(i*2,1)/32768.0;
+			return out;
+		}
+	wavbuff2mp3:function(file){
+			return this.float32tomp3(wavbuff2float32(file));
+		}
+}
+
+
 WAVGEN={
 	use_callback:"WARNING: a callback function is detected and data has been forwarded.",
 	use_regular_waveform_data:0,//replace waveform data by database data
