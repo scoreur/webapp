@@ -542,6 +542,16 @@ WAVGEN_NEW={
 		});
 		return this.warning;
 	},
+	SAVE_MP3:function(data,filename){
+		if(!filename)filename="scores";
+		if(!/\.mp3$/.test(filename))filename+='.mp3';
+		this.RENDER_F32(data,function(f32data){
+			var bin=MP3ENCODE.float32tomp3(f32data);
+			var blob=new Blob([bin],{type:"audio/mp3"});
+			saveAs(blob,filename);
+		});
+		return this.warning;
+	},
 	PLAY:function(data){
 		var playnow=function(s){s();}
 		var unit_ms=data.time_unit/48;
