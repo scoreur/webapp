@@ -58,11 +58,21 @@ LINER={
 		return [p.x,p.y];
 	},
 	mouse_handlers:{
-		up:function(evt){
+		global_up:function(evt){
 			window._mousedown=false;
 		},
-		down:function(evt){
+		global_down:function(evt){
 			window._mousedown=true;
+		},
+		up:function(evt){
+			var rect=evt.target.instance;
+			var ox=rect.cx(), oy=rect.cy();
+			rect.size(10,20).cx(ox).cy(oy);
+		},
+		down:function(evt){
+			var rect=evt.target.instance;
+			var ox=rect.cx(), oy=rect.cy();
+			rect.size(30,LINER.settings.extra_vertical_spacing).cx(ox).cy(oy);
 		},
 		move:function(evt){//only process mouse dragging;
 			if(!window._mousedown)return;
@@ -80,8 +90,8 @@ LINER={
 		if(typeof elem == "string")
 			elem=document.getElementById(elem);
 		if(!elem)return;
-		elem.onmousedown=LINER.mouse_handlers.down;
-		elem.onmouseup=LINER.mouse_handlers.up;
+		elem.onmousedown=LINER.mouse_handlers.global_down;
+		elem.onmouseup=LINER.mouse_handlers.global_up;
 		
 		var lineend=LINER.settings.initial_padding+LINER.settings.scorewidth*LINER.settings.beatsperseq*LINER.settings.seqperline;
 		
@@ -184,9 +194,12 @@ LINER={
 					frnum:score.frnum
 				};
 				mysc.svgelem=elem.newnote(mysc.duration);
-				mysc.svgelem.mysc=mysc;
-				mysc.svgelem.on('mousemove',LINER.mouse_handlers.move);
-				
+				mysc._svgelem=elem.svg.rect(10,30).stroke('red').fill('yellow');
+				mysc._svgelem.mysc=mysc;
+				mysc._svgelem.on('mousemove',LINER.mouse_handlers.move);
+				mysc._svgelem.on('mouseup',LINER.mouse_handlers.up);
+				mysc._svgelem.on('mouseout',LINER.mouse_handlers.up);
+				mysc._svgelem.on('mousedown',LINER.mouse_handlers.down);
 				mysc.moveTo=function(time,frnum){
 					mysc.time=time;mysc.frnum=frnum;
 					var line=LINER.line_conversion(frnum);
@@ -215,6 +228,11 @@ LINER={
 					
 					
 					liner.update_rest(time);
+					
+					mysc._svgelem.remove();
+					mysc.svgelem.parent.add(mysc._svgelem);
+					mysc._svgelem.center(mysc.svgelem.cx(),mysc.svgelem.cy());
+					//
 					return mysc.svgelem;
 				}
 				elem.scores.push(mysc);
