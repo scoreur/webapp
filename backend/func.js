@@ -183,6 +183,13 @@ WAVGEN={
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus);
 	},
+	SAVE:function(data,filename){
+		if(!filename)filename="scores";
+		if(!/\.wav$/.test(filename))filename+='.wav';
+		var bin=this.RENDER(data);
+		var blob=new Blob([bin],{type:"audio/wav"});
+		setTimeout(function(){saveAs(blob,filename);},0);
+	},
 	PLAY:function(data){
 		var buffer=this.RENDER(data);
 		try{
@@ -382,7 +389,7 @@ WAVGEN_NEW={
 		this.writeRIFFHeader(bin);
 		return bin;
 	},
-	saveScoreSequences:function(unit_ms,chorus,filename){
+	saveScoreSequences_rawbuffer:function(unit_ms,chorus,callback){
 		//use offline rendering to save stuff.
 		//consider alter ctx directly?
 		var max_time=0;
@@ -411,21 +418,26 @@ WAVGEN_NEW={
 				var buffer=d.renderedBuffer;
 				ctx_recovery();
 				var bin=converter(buffer);
-				var blob=new Blob([bin],{type:"audio/wav"});
-				saveAs(blob,filename);
+				callback(bin);
 			}
 			octx.startRendering();
 		});
 	},
-	RENDER:function(data,filename){
-		if(!filename)filename="scores";
-		if(!/\.wav$/.test(filename))filename+='.wav';
+	RENDER:function(data,callback){
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
 			for(var i=0;i<data.chorus.length;i++)
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
-		this.saveScoreSequences(unit_ms,data.chorus,filename);
+		this.saveScoreSequences_rawbuffer(unit_ms,data.chorus,callback);
+	},
+	SAVE:function(data,filename){
+		if(!filename)filename="scores";
+		if(!/\.wav$/.test(filename))filename+='.wav';
+		this.RENDER(data,function(bin){
+			var blob=new Blob([bin],{type:"audio/wav"});
+			saveAs(blob,filename);
+		});
 	},
 	PLAY:function(data){
 		var playnow=function(s){s();}
