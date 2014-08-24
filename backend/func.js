@@ -92,7 +92,7 @@ WAVGEN={
 		return "data:audio/wav;base64,"+b64;
 	},
 	buffer2blobsrc:function(buffer){
-		var blob=new Blob(buffer,{type:"audio/wav"});
+		var blob=new Blob([buffer],{type:"audio/wav"});
 		return URL.createObjectURL(blob);
 	},
 	//Read the scores and save into wav file.
@@ -184,7 +184,7 @@ WAVGEN={
 		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus);
 	},
 	PLAY:function(data){
-		var src=this.buffer2b64src(this.RENDER(data));
+		var src=this.buffer2blobsrc(this.RENDER(data));
 		var el=document.createElement('audio');
 		el.onended=function(){
 			el.src='';
