@@ -364,16 +364,77 @@ WAVGEN_NEW={
 			this.generateScoreSequencePlayer(unit_ms,instrument[1],instrument[2],done);
 		}
 	},
-	RENDER:function(data,callback){
+	writeRIFFHeader:function(buffer){
+		var headdv=new DataView(buffer);
+		var contentlength=buffer.byteLength-44;
+		var riff_header="52494646FFFFFFFF57415645666D7420100000000100010044AC000010B102000200100064617461FFFFFFFF".match(/../g).map(function(s){return parseInt(s,16);});
+		for(var i=0;i<44;i++)
+			headdv.setUint8(i,riff_header[i]);
+		headdv.setUint32(40,contentlength,true);
+		headdv.setUint32(4,contentlength+36,true);
+		delete headdv;
 	},
-	PLAY:function(data){
-	
+	audioBuffer2wav:function(buffer){//Only for mono; stereo to be implemented.
+		var data=buffer.getChannelData(0);
+		var bin=new ArrayBuffer(44+data.length*2), dv=new DataView(bin,44);
+		for(var i=0;i<data.length;i++)
+			dv.setInt16(i*2,Math.floor(32768*data[i]),1);
+		this.writeRIFFHeader(bin);
+		return bin;
+	},
+	saveScoreSequences:function(unit_ms,chorus,filename){
+		//use offline rendering to save stuff.
+		//consider alter ctx directly?
+		var max_time=0;
+		for(var i=0;i<chorus.length;i++)
+		{
+			var scores=chorus[i][1];
+			scores.map(function(s){
+				if(s[0]+s[1]>max_time)
+					max_time=s[0]+s[1];
+			});
+		}
+		console.log('creating octx:',1,this.sampleps*unit_ms/1000*max_time,this.sampleps);
+		var octx=new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1,this.sampleps*unit_ms/1000*max_time,this.sampleps);
+		this._lctx=this.ctx;
+		this.ctx=octx;
+		var ctx_recovery=(function(_this){return function(){
+			_this.ctx=_this._lctx;
+		}})(this);
+		var converter=(function(f,_this){return function(d){
+			return f.apply(_this,[d]);
+		}})(this.audioBuffer2wav,this);
+		this.generateScoreSequencesPlayer(unit_ms,chorus,function(p){
+			p();
+			octx.oncomplete=function(d){
+				if(!d.returnValue)throw "Octx generation error";
+				var buffer=d.renderedBuffer;
+				ctx_recovery();
+				var bin=converter(buffer);
+				var blob=new Blob([bin],{type:"audio/wav"});
+				saveAs(blob,filename);
+			}
+			octx.startRendering();
+		});
+	},
+	RENDER:function(data,filename){
+		if(!filename)filename="scores";
+		if(!/\.wav$/.test(filename))filename+='.wav';
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
 			for(var i=0;i<data.chorus.length;i++)
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
-		this.generateScoreSequencesPlayer(unit_ms,data.chorus,function(s){s();});
+		this.saveScoreSequences(unit_ms,data.chorus,filename);
+	},
+	PLAY:function(data){
+		var playnow=function(s){s();}
+		var unit_ms=data.time_unit/48;
+		if(this.use_regular_waveform_data)
+			for(var i=0;i<data.chorus.length;i++)
+				if(WAVEFORM[data.chorus[i][0]])
+					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
+		this.generateScoreSequencesPlayer(unit_ms,data.chorus,playnow);
 	}
 }
 WAVPLAY={
