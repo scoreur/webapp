@@ -110,11 +110,12 @@ LINER={
 		elem.newrest=function(duration){
 			//to be implemented: fudian?
 			var el;
+			var rh=3*LINER.settings.lineheight;
 			switch(duration){
 				case 1:
-					el=elem.svg.image('./resources/staff/quaver_rest.png').size(LINER.settings.scoresize,LINER.settings.scoresize);break;
+					el=elem.svg.image('./resources/staff/quaver_rest.png').size(rh,rh);break;
 				case 2:
-					el=elem.svg.image('./resources/staff/quarter_rest.png').size(LINER.settings.scoresize,LINER.settings.scoresize);
+					el=elem.svg.image('./resources/staff/quarter_rest.png').size(rh,rh);
 				break;
 				case 4:
 					el=elem.svg.group().size(LINER.settings.lineheight,2*LINER.settings.lineheight);
