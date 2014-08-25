@@ -61,6 +61,9 @@ LINER={
 		p=p.matrixTransform(m.inverse());
 		return [p.x,p.y];
 	},
+	notify_move_frnum:function(frnum){
+	  //todo
+	},
 	mouse_handlers:{
 		global_up:function(evt){
 			window._mousedown=false;
@@ -93,7 +96,7 @@ LINER={
 			if(evt.button>=2){
 				ntime=LINER.inverse_x_conversion(c[0]);
 			}
-			//play sound? todo
+			LINER.notify_move_frnum(frnum);
 			mysc.moveTo(ntime,frnum);
 		}
 	},
@@ -113,8 +116,7 @@ LINER={
 			if(evt.touches.length>=2){
 				ntime=LINER.inverse_x_conversion(c[0]);
 			}
-			//mimic right click? todo
-			//play sound? todo
+			LINER.notify_move_frnum(frnum);
 			mysc.moveTo(ntime,frnum);
 		}
 	},
