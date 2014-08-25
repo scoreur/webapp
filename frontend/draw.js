@@ -12,6 +12,7 @@ LINER={
 		clef_x_offset:30,
 		extra_vertical_spacing:50,
 		RESOURCE_ROOT:'./resources/staff/',
+		WAVEFORM:[1],
 	},
 	line_conversion:function(frnum){
 		//39 -> origin,
@@ -56,8 +57,11 @@ LINER={
 		p=p.matrixTransform(m.inverse());
 		return [p.x,p.y];
 	},
-	notify_move_frnum:function(frnum){
-	  //todo
+	notify_move_frnum:function(frnum,waveform,duration){
+		duration=duration||300;
+		WAVPLAY.stop_all();
+		WAVPLAY.score_start(frnum,waveform);
+		setTimeout(function(){WAVPLAY.score_end(frnum,waveform);},duration);
 	},
 	mouse_handlers:{
 		global_up:function(evt){
@@ -91,7 +95,7 @@ LINER={
 			if(evt.button>=2){
 				ntime=LINER.inverse_x_conversion(c[0]);
 			}
-			LINER.notify_move_frnum(frnum);
+			
 			mysc.moveTo(ntime,frnum);
 		}
 	},
@@ -110,7 +114,7 @@ LINER={
 			if(evt.touches.length>=2){
 				ntime=LINER.inverse_x_conversion(c[0]);
 			}
-			LINER.notify_move_frnum(frnum);
+			
 			mysc.moveTo(ntime,frnum);
 		}
 	},
@@ -133,6 +137,9 @@ LINER={
 		var lineend=LINER.settings.initial_padding+LINER.settings.scorewidth*LINER.settings.beatsperseq*LINER.settings.seqperline;
 		
 		elem.svg=SVG(elem);
+		
+		elem.waveform=LINER.settings.WAVEFORM.slice(0);
+		
 		elem.svg.upper=elem.svg.nested();
 		elem.svg.lower=elem.svg.nested();
 		elem.svg.lower.cy(LINER.settings.extra_vertical_spacing);
@@ -242,7 +249,9 @@ LINER={
 				mysc._svgelem.node.ontouchmove=LINER.touch_handlers.move;
 				
 				mysc.moveTo=function(time,frnum){
+					mysc.lasty=mysc.frnum;
 					mysc.time=time;mysc.frnum=frnum;
+					
 					var line=LINER.line_conversion(frnum);
 					if(line>=0 && (mysc.svgelem.parent!=elem.svg.upper))
 					{
@@ -267,13 +276,15 @@ LINER={
 					elem.liner.update_additional_line(time);
 					mysc.lastx=time;
 					
-					
+					if(mysc.lasty && mysc.lasty!=mysc.frnum)
+					{
+						LINER.notify_move_frnum(frnum,elem.waveform);
+					}
 					elem.liner.update_rest(time);
 					
 					mysc._svgelem.remove();
 					mysc.svgelem.parent.add(mysc._svgelem);
 					mysc._svgelem.center(mysc.svgelem.cx(),mysc.svgelem.cy());
-					//
 					return mysc.svgelem;
 				}
 				elem.scores.push(mysc);

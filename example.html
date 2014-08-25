@@ -36,7 +36,7 @@ window.myapp=(function(window,document){
 					}
 				});
 				
-				LINER.initialize(el,{RESOURCE_ROOT:'frontend/resources/staff/'});
+				LINER.initialize(el,{RESOURCE_ROOT:'frontend/resources/staff/',WAVEFORM:data.chorus[i][2]});
 				el.liner.addscores(scoredata);
 			}
 		},
