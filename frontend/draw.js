@@ -11,13 +11,8 @@ LINER={
 		initial_padding:100,
 		clef_x_offset:30,
 		extra_vertical_spacing:50,
+		RESOURCE_ROOT:'./resources/staff/',
 	},
-	/*
-	images:{
-		ROOTURL:'./resources/staff/',
-		bass_clef:{0,-30},
-		
-	},*/
 	line_conversion:function(frnum){
 		//39 -> origin,
 		//0,2,4,5,7,9,11,12
@@ -119,11 +114,19 @@ LINER={
 			mysc.moveTo(ntime,frnum);
 		}
 	},
-	initialize:function(elem)
+	initialize:function(elem,settings)
 	{
 		if(typeof elem == "string")
 			elem=document.getElementById(elem);
 		if(!elem)return;
+		
+		if(typeof settings == "object")
+		{
+			for(var i in settings){
+				LINER.settings[i]=settings[i];
+			}
+		}
+		
 		elem.onmousedown=LINER.mouse_handlers.global_down;
 		elem.onmouseup=LINER.mouse_handlers.global_up;
 		
@@ -138,13 +141,13 @@ LINER={
 		elem.svg.lower.cx(20);
 		var bracket_y=LINER.y_conversion(0)+LINER.settings.extra_vertical_spacing/2;
 		var bracket_size=LINER.y_conversion(-6)-LINER.y_conversion(6)+LINER.settings.extra_vertical_spacing;
-		bracket_img=elem.svg.image('./resources/staff/bracket.png').size(bracket_size,bracket_size).center(10,bracket_y);
+		bracket_img=elem.svg.image(LINER.settings.RESOURCE_ROOT+'bracket.png').size(bracket_size,bracket_size).center(10,bracket_y);
 		bracket_line=elem.svg.line(20,LINER.y_conversion(5),20,LINER.y_conversion(-5)+LINER.settings.extra_vertical_spacing).stroke('black');
 		
 		var bcf=4*LINER.settings.lineheight;
 		var tcf=8*LINER.settings.lineheight;
-		img=elem.svg.lower.image('./resources/staff/bass_clef.png').size(bcf,bcf).center(LINER.settings.clef_x_offset,LINER.y_conversion(-2.5));
-		img=elem.svg.upper.image('./resources/staff/treble_clef.png').size(tcf,tcf).center(LINER.settings.clef_x_offset,LINER.y_conversion(3));
+		img=elem.svg.lower.image(LINER.settings.RESOURCE_ROOT+'bass_clef.png').size(bcf,bcf).center(LINER.settings.clef_x_offset,LINER.y_conversion(-2.5));
+		img=elem.svg.upper.image(LINER.settings.RESOURCE_ROOT+'treble_clef.png').size(tcf,tcf).center(LINER.settings.clef_x_offset,LINER.y_conversion(3));
 		
 		elem.svg.upper.tails=elem.svg.upper.nested();
 		elem.svg.lower.tails=elem.svg.lower.nested();
@@ -180,10 +183,10 @@ LINER={
 			switch(duration){
 				case 1://eighth/quaver
 				case 2://quarter
-				case 3:src='./resources/staff/quarternote.png';break;
+				case 3:src=LINER.settings.RESOURCE_ROOT+'quarternote.png';break;
 				case 4:
-				case 6:src='./resources/staff/halfnote.png';break;
-				case 8:src='./resources/staff/fullnote.png';break;	
+				case 6:src=LINER.settings.RESOURCE_ROOT+'halfnote.png';break;
+				case 8:src=LINER.settings.RESOURCE_ROOT+'fullnote.png';break;	
 			}
 			var img=elem.svg.image(src);
 			img.remove();
@@ -198,9 +201,9 @@ LINER={
 			var rh=3*LINER.settings.lineheight;
 			switch(duration){
 				case 1:
-					el=elem.svg.image('./resources/staff/quaver_rest.png').size(rh,rh);break;
+					el=elem.svg.image(LINER.settings.RESOURCE_ROOT+'quaver_rest.png').size(rh,rh);break;
 				case 2:
-					el=elem.svg.image('./resources/staff/quarter_rest.png').size(rh,rh);
+					el=elem.svg.image(LINER.settings.RESOURCE_ROOT+'quarter_rest.png').size(rh,rh);
 				break;
 				case 4:
 					el=elem.svg.group().size(LINER.settings.lineheight,2*LINER.settings.lineheight);
@@ -258,14 +261,14 @@ LINER={
 						mysc.svgelem.scoredata.cy+y
 					);
 					
-					liner.update_tail(mysc);
+					elem.liner.update_tail(mysc);
 					
-					liner.update_additional_line(mysc.lastx);
-					liner.update_additional_line(time);
+					elem.liner.update_additional_line(mysc.lastx);
+					elem.liner.update_additional_line(time);
 					mysc.lastx=time;
 					
 					
-					liner.update_rest(time);
+					elem.liner.update_rest(time);
 					
 					mysc._svgelem.remove();
 					mysc.svgelem.parent.add(mysc._svgelem);
@@ -328,7 +331,7 @@ LINER={
 				mysc.svgelem.tail=mysc.svgelem.parent.tails.nested();
 				switch(mysc.duration){
 					case 1:
-						var src=isup?'./resources/staff/notetail_up.png':'./resources/staff/notetail_down.png';
+						var src=LINER.settings.RESOURCE_ROOT+(isup?'notetail_up.png':'notetail_down.png');
 						mysc.svgelem.tail.image(src).size(LINER.settings.tailsize,LINER.settings.tailsize).center(tx,tye+(isup?0.5:-0.5)*LINER.settings.tailsize);
 					case 2:
 					case 4:
