@@ -476,8 +476,29 @@ LINER={
 							}
 						}
 					}
-				},
-				set_highlight:function(){}
+				}
+			},
+			set_highlight:function(num){
+				if(num<0)
+				{
+					try{
+						elem.svg.upper.highlight.opacity(0);
+						elem.svg.lower.highlight.opacity(0);
+					}catch(e){}
+					return;
+				}
+				
+				var hxs=LINER.settings.initial_padding+LINER.settings.scorewidth*LINER.settings.beatsperseq*num;
+				var hxe=LINER.settings.initial_padding+LINER.settings.scorewidth*LINER.settings.beatsperseq*(num+1);
+				if(!elem.svg.upper.highlight)elem.svg.upper.highlight=elem.svg.upper.rect(hxe-hxs,4*LINER.settings.lineheight).fill('yellow');
+				if(!elem.svg.lower.highlight)elem.svg.lower.highlight=elem.svg.lower.rect(hxe-hxs,4*LINER.settings.lineheight).fill('yellow');
+				elem.svg.upper.highlight.opacity(1);
+				elem.svg.lower.highlight.opacity(1);
+				var hy=LINER.y_conversion(3);
+				elem.svg.upper.highlight.center((hxe+hxs)/2,hy);
+				var hy=LINER.y_conversion(-3);
+				elem.svg.lower.highlight.center((hxe+hxs)/2,hy);
+				return [elem.svg.upper.highlight,elem.svg.lower.highlight];
 			}
 		};
 		
