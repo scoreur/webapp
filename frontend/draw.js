@@ -50,7 +50,7 @@ LINER={
 		return 12*eig+39+linepos2frnum[line*2];
 	},
 	SVG_transxy:function(node,ex,ey){  
-		var p=elem.svg.node.createSVGPoint();
+		var p=node.ownerSVGElement.createSVGPoint();
 		p.x=ex;p.y=ey;
 		var m=node.getScreenCTM();
 		p=p.matrixTransform(m.inverse());
