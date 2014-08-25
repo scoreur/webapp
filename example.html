@@ -68,8 +68,14 @@ window.myapp=(function(window,document){
 		exportDataProc:function(){
 			$('#data').value=JSON.stringify(APP.exportData.apply(APP));
 		},
-		playData:function(data){},
-		playDataProc:function(){},
+		playData:function(data){
+			WAVGEN_NEW.PLAY(data);
+		},
+		playDataProc:function(){
+			//data cleanup? formatting?
+			APP.exportData.apply(APP);
+			APP.playData.apply(APP,[APP.current_data]);
+		},
 		initialize:function(){
 			$('#btn_parse').addEventListener('click',APP.parseDataProc);
 			$('#btn_play').addEventListener('click',APP.playDataProc);
