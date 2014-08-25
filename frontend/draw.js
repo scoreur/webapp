@@ -85,7 +85,7 @@ LINER={
 				//scroll button: todo: change duration?
 			}
 			
-			var c=LINER.SVG_transxy(evt.target,evt.x,evt.y);
+			var c=LINER.SVG_transxy(evt.target,evt.clientX,evt.clientY);
 			var line=LINER.inverse_y_conversion(c[1]);
 			var frnum=LINER.inverse_line_conversion(line);
 			
@@ -97,7 +97,27 @@ LINER={
 			mysc.moveTo(ntime,frnum);
 		}
 	},
-	//touch handlers:{},
+	touch_handlers:{
+		start:function(evt){evt.preventDefault();},
+		end:function(evt){},
+		move:function(evt){
+			var mysc=evt.target.instance.mysc;
+			
+			var t=evt.targetTouches[0];
+			
+			var c=LINER.SVG_transxy(evt.target,t.clientX,t.clientY);
+			var line=LINER.inverse_y_conversion(c[1]);
+			var frnum=LINER.inverse_line_conversion(line);
+			
+			var ntime=mysc.time;
+			if(evt.touches.length>=2){
+				ntime=LINER.inverse_x_conversion(c[0]);
+			}
+			//mimic right click? todo
+			//play sound? todo
+			mysc.moveTo(ntime,frnum);
+		}
+	},
 	initialize:function(elem)
 	{
 		if(typeof elem == "string")
@@ -209,10 +229,14 @@ LINER={
 				mysc.svgelem=elem.newnote(mysc.duration);
 				mysc._svgelem=elem.svg.rect(10,30).opacity(0);
 				mysc._svgelem.mysc=mysc;
-				mysc._svgelem.on('mousemove',LINER.mouse_handlers.move);
-				mysc._svgelem.on('mouseup',LINER.mouse_handlers.up);
-				mysc._svgelem.on('mouseout',LINER.mouse_handlers.up);
-				mysc._svgelem.on('mousedown',LINER.mouse_handlers.down);
+				mysc._svgelem.node.onmousemove=LINER.mouse_handlers.move;
+				mysc._svgelem.node.onmouseup=LINER.mouse_handlers.up;
+				mysc._svgelem.node.onmouseout=LINER.mouse_handlers.up;
+				mysc._svgelem.node.onmousedown=LINER.mouse_handlers.down;
+				mysc._svgelem.node.ontouchstart=LINER.touch_handlers.start;
+				mysc._svgelem.node.ontouchend=LINER.touch_handlers.end;
+				mysc._svgelem.node.ontouchmove=LINER.touch_handlers.move;
+				
 				mysc.moveTo=function(time,frnum){
 					mysc.time=time;mysc.frnum=frnum;
 					var line=LINER.line_conversion(frnum);
