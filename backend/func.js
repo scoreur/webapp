@@ -493,7 +493,7 @@ WAVGEN_NEW={
 	saveScoreSequences_rawbufferF32:function(unit_ms,chorus,callback){
 		if(typeof callback!='function')throw this.nocallback;
 		var max_time=0;
-		for(var i in data.chorus)
+		for(var i in chorus)
 		{
 			var scores=chorus[i][1];
 			scores.map(function(s){
