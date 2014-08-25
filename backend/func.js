@@ -588,6 +588,11 @@ WAVPLAY={
 		frnum-=48;
 		return 440*Math.pow(2,frnum/12);
 	},
+	hz2frnum:function(hz){
+		//440hz = 48
+		var frnum=12*(Math.log(hz/440)/Math.LN2);
+		return 48+Math.round(frnum);
+	},
 	sourceNodes:[],
 	gainNodes:[],
 	biquad:false,
