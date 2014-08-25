@@ -462,7 +462,7 @@ WAVGEN_NEW={
 				ssplayers.map(function(p){p();});	
 			});
 		});
-		for(var i in data.chorus)
+		for(var i in chorus)
 		{
 			var instrument=chorus[i];
 			var taskFinished=q.newTask();
