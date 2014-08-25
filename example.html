@@ -8,11 +8,100 @@
 		<script src="./frontend/lib/svg.js"></script>
 		<script src="./frontend/draw.js"></script>
 		<script>
-function myapp(){
-}
-window.addEventListener('load',myapp);
+window.$=function(){return document.querySelector.apply(document,arguments);}
+window.$$=function(){return document.querySelectorAll.apply(document,arguments);}
+window.myapp=(function(window,document){
+	var APP={
+		settings:{
+			scoreline_height:200
+		},
+		current_data:{},
+		scorelines:[],
+		parseData:function(data){
+			APP.current_data=data;
+			for(var i in data.chorus){
+				var p=document.createElement('p');
+				p.innerText=data.chorus[i][0];
+				$('#canvases').appendChild(p);
+				var el=document.createElement('div');
+				el.style.height=APP.settings.scoreline_height;
+				$('#canvases').appendChild(el);
+				APP.scorelines.push(el);
+				
+				var scoredata=data.chorus[i][1].map(function(s){
+					return {
+						time:s[0]/3,
+						duration:s[1]/3,
+						frnum:WAVPLAY.hz2frnum(s[2])
+					}
+				});
+				
+				LINER.initialize(el,{});
+				el.liner.addscores(scoredata);
+			}
+		},
+		parseDataProc:function(){
+			var data=$('#data').value;
+			try{
+				//data=JSON.parse(data);
+				data=eval.apply({},['tmp='+data]);
+			}
+			catch(e){
+				console.log(e);
+				alert('Data parse error');
+				throw(e);
+			}
+			$('#data').value='';
+			APP.parseData.apply(APP,[data]);
+		},
+		exportData:function(){
+			//fetch new data from scores
+			return APP.current_data;
+		},
+		exportDataProc:function(){
+			$('#data').value=JSON.stringify(APP.exportData.apply(APP));
+		},
+		playData:function(data){},
+		playDataProc:function(){},
+		initialize:function(){
+			$('#btn_parse').addEventListener('click',APP.parseDataProc);
+			$('#btn_play').addEventListener('click',APP.playDataProc);
+			$('#btn_export').addEventListener('click',APP.exportDataProc);
+		}
+	};
+	return APP;
+})(window,document);
+window.addEventListener('load',myapp.initialize);
 		</script>
 	</head>
 	<body>
+		<div id="controller">
+			<button id="btn_parse">Parse Data</button>
+			<button id="btn_play">Play</button>
+			<button id="btn_export">Export Data</button>
+		</div>
+		<div id="canvases">
+		
+		</div>
+		
+		<textarea id="data">
+//example data
+{
+	time_unit:750,//(ms, 1 standard beat (48 score units), or approximately 1/4800 minute)
+	chorus:[
+		[
+			"piano",
+			[[1*12,1*12,440],[2*12,1*12,880],[3*12,2*12,740]], //scores
+			[1,0.1,0.3,0,0,-0.2] //waveform
+		],
+		[
+			"smule",
+			[[5*12,1*12,440],[6*12,1*12,740],[7*12,1*12,880]],
+			[1]
+		]
+	]
+}		
+		</textarea>
+	
 	</body>
 </html>
