@@ -15,7 +15,7 @@ window.myapp=(function(window,document){
 		settings:{
 			scoreline_height:250
 		},
-		current_data:{},
+		current_data:false,
 		scorelines:[],
 		parseData:function(data){
 			APP.current_data=data;
@@ -92,7 +92,10 @@ window.myapp=(function(window,document){
 		},
 		saveSTAFFProc:function(){
 			var data=APP.exportData.apply(APP);
-			saveAs(new Blob([JSON.stringify(data)]),'staff.json');
+			if(data)
+				saveAs(new Blob([JSON.stringify(data)]),'staff.json');
+			else
+				alert('No data available');
 		},
 		initialize:function(){
 			$('#btn_parse').addEventListener('click',APP.parseDataProc);
