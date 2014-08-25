@@ -212,7 +212,7 @@ WAVGEN={
 	saveScoreSequences_rawbuffer:function(unit_ms,chorus,callback)
 	{
 		var buffers=[];
-		for(var i=0;i<chorus.length;i++)
+		for(var i in chorus)
 		{
 			var instrument=chorus[i];
 			buffers.push(
@@ -248,7 +248,7 @@ WAVGEN={
 	RENDER_WAV:function(data,callback){
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
-			for(var i=0;i<data.chorus.length;i++)
+			for(var i in data.chorus)
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus,callback);
@@ -256,7 +256,7 @@ WAVGEN={
 	RENDER_F32:function(data,callback){
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
-			for(var i=0;i<data.chorus.length;i++)
+			for(var i in data.chorus)
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		var _this=this;
@@ -462,7 +462,7 @@ WAVGEN_NEW={
 				ssplayers.map(function(p){p();});	
 			});
 		});
-		for(var i=0;i<chorus.length;i++)
+		for(var i in data.chorus)
 		{
 			var instrument=chorus[i];
 			var taskFinished=q.newTask();
@@ -501,7 +501,7 @@ WAVGEN_NEW={
 	saveScoreSequences_rawbufferF32:function(unit_ms,chorus,callback){
 		if(typeof callback!='function')throw this.nocallback;
 		var max_time=0;
-		for(var i=0;i<chorus.length;i++)
+		for(var i in data.chorus)
 		{
 			var scores=chorus[i][1];
 			scores.map(function(s){
@@ -531,7 +531,7 @@ WAVGEN_NEW={
 	RENDER_WAV:function(data,callback){
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
-			for(var i=0;i<data.chorus.length;i++)
+			for(var i in data.chorus)
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		this.saveScoreSequences_rawbufferWAV(unit_ms,data.chorus,callback);
@@ -540,7 +540,7 @@ WAVGEN_NEW={
 	RENDER_F32:function(data,callback){
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
-			for(var i=0;i<data.chorus.length;i++)
+			for(var i in data.chorus)
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		this.saveScoreSequences_rawbufferF32(unit_ms,data.chorus,callback);
@@ -570,7 +570,7 @@ WAVGEN_NEW={
 		var playnow=function(s){s();}
 		var unit_ms=data.time_unit/48;
 		if(this.use_regular_waveform_data)
-			for(var i=0;i<data.chorus.length;i++)
+			for(var i in data.chorus)
 				if(WAVEFORM[data.chorus[i][0]])
 					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		this.generateScoreSequencesPlayer(unit_ms,data.chorus,playnow);
