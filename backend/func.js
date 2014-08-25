@@ -1,8 +1,3 @@
-window.WAVEFORM={
-	piano:[1,0.5,0.3,0.08,0,0,0,0,0.04],
-	smule:[1],
-	sine:[1]
-}
 MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
 	float32tomp3:function(buff,sampleps)
 		{
@@ -61,7 +56,6 @@ MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
 
 WAVGEN={
 	use_callback:"WARNING: a callback function is detected and data has been forwarded.",
-	use_regular_waveform_data:0,//replace waveform data by database data
 	sampleps:44100,
 	wavSize:16,//2 bytes per sample
 	amplitude:20000,
@@ -247,18 +241,10 @@ WAVGEN={
 	},
 	RENDER_WAV:function(data,callback){
 		var unit_ms=data.time_unit/48;
-		if(this.use_regular_waveform_data)
-			for(var i in data.chorus)
-				if(WAVEFORM[data.chorus[i][0]])
-					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		return this.saveScoreSequences_rawbuffer(unit_ms,data.chorus,callback);
 	},
 	RENDER_F32:function(data,callback){
 		var unit_ms=data.time_unit/48;
-		if(this.use_regular_waveform_data)
-			for(var i in data.chorus)
-				if(WAVEFORM[data.chorus[i][0]])
-					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		var _this=this;
 		function calc()
 		{
@@ -321,7 +307,6 @@ WAVGEN={
 	}
 }
 WAVGEN_NEW={
-	use_regular_waveform_data:0,
 	sampleps:44100,
 	amplitude:1,
 	wav_amplitude:3000,
@@ -537,19 +522,11 @@ WAVGEN_NEW={
 	},
 	RENDER_WAV:function(data,callback){
 		var unit_ms=data.time_unit/48;
-		if(this.use_regular_waveform_data)
-			for(var i in data.chorus)
-				if(WAVEFORM[data.chorus[i][0]])
-					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		this.saveScoreSequences_rawbufferWAV(unit_ms,data.chorus,callback);
 		return this.warning;
 	},
 	RENDER_F32:function(data,callback){
 		var unit_ms=data.time_unit/48;
-		if(this.use_regular_waveform_data)
-			for(var i in data.chorus)
-				if(WAVEFORM[data.chorus[i][0]])
-					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		this.saveScoreSequences_rawbufferF32(unit_ms,data.chorus,callback);
 		return this.warning;
 	},
@@ -576,10 +553,6 @@ WAVGEN_NEW={
 	PLAY:function(data){
 		var playnow=function(s){s();}
 		var unit_ms=data.time_unit/48;
-		if(this.use_regular_waveform_data)
-			for(var i in data.chorus)
-				if(WAVEFORM[data.chorus[i][0]])
-					data.chorus[i][2]=WAVEFORM[data.chorus[i][0]];
 		this.generateScoreSequencesPlayer(unit_ms,data.chorus,playnow);
 	}
 }
