@@ -90,11 +90,16 @@ window.myapp=(function(window,document){
 			APP.exportData.apply(APP);
 			WAVGEN_NEW.SAVE_WAV(APP.current_data,'save');
 		},
+		saveSTAFFProc:function(){
+			var data=APP.exportData.apply(APP);
+			saveAs(new Blob([JSON.stringify(data)]),'staff.json');
+		},
 		initialize:function(){
 			$('#btn_parse').addEventListener('click',APP.parseDataProc);
 			$('#btn_play').addEventListener('click',APP.playDataProc);
 			$('#btn_export').addEventListener('click',APP.exportDataProc);
 			$('#btn_saveWAV').addEventListener('click',APP.saveWAVProc);
+			$('#btn_saveSTAFF').addEventListener('click',APP.saveSTAFFProc);
 		}
 	};
 	return APP;
@@ -107,6 +112,7 @@ window.addEventListener('load',myapp.initialize);
 			<button id="btn_parse">Parse Data</button>
 			<button id="btn_play">Play</button>
 			<button id="btn_saveWAV">Save(to wav)</button>
+			<button id="btn_saveSTAFF">Save staff</button>
 			<button id="btn_export">Export Data</button>
 		</div>
 		<div id="canvases">
