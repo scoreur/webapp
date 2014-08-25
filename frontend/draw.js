@@ -104,11 +104,10 @@ LINER={
 		start:function(evt){evt.preventDefault();},
 		end:function(evt){},
 		move:function(evt){
-			var mysc=evt.target.instance.mysc;
-			
 			var t=evt.targetTouches[0];
+			var mysc=t.target.instance.mysc;
 			
-			var c=LINER.SVG_transxy(evt.target,t.clientX,t.clientY);
+			var c=LINER.SVG_transxy(t.target,t.clientX,t.clientY);
 			var line=LINER.inverse_y_conversion(c[1]);
 			var frnum=LINER.inverse_line_conversion(line);
 			
@@ -214,7 +213,7 @@ LINER={
 					el.rect(LINER.settings.lineheight,LINER.settings.lineheight*0.5).center(LINER.settings.lineheight*0.5,LINER.settings.lineheight*0.25).fill('black');
 				break;
 			}
-			
+			el.opacity(0.5);
 			el.remove();
 			return el;
 		}
