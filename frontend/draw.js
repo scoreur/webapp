@@ -476,7 +476,8 @@ LINER={
 							}
 						}
 					}
-				}
+				},
+				set_highlight:function(){}
 			}
 		};
 		
