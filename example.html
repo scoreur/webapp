@@ -61,7 +61,7 @@ window.myapp=(function(window,document){
 			for(var i in data.chorus){
 				var el=APP.scorelines[i];
 				data.chorus[i][1]=el.scores.map(function(s){
-					return [s.time*3,s.duration*3,WAVPLAY.frnum2hz(s.frnum)];
+					return [s.time*3,s.duration*3,Math.floor(WAVPLAY.frnum2hz(s.frnum)*100)/100];
 				});
 			}
 			return data;
