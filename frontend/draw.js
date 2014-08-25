@@ -151,9 +151,9 @@ LINER={
 		bracket_img=elem.svg.image(LINER.settings.RESOURCE_ROOT+'bracket.png').size(bracket_size,bracket_size).center(10,bracket_y);
 		bracket_line=elem.svg.line(20,LINER.y_conversion(5),20,LINER.y_conversion(-5)+LINER.settings.extra_vertical_spacing).stroke('black');
 		
-		var bcf=4*LINER.settings.lineheight;
+		var bcf=5*LINER.settings.lineheight;
 		var tcf=8*LINER.settings.lineheight;
-		img=elem.svg.lower.image(LINER.settings.RESOURCE_ROOT+'bass_clef.png').size(bcf,bcf).center(LINER.settings.clef_x_offset,LINER.y_conversion(-2.5));
+		img=elem.svg.lower.image(LINER.settings.RESOURCE_ROOT+'bass_clef.png').size(bcf,bcf).center(LINER.settings.clef_x_offset,LINER.y_conversion(-2.8));
 		img=elem.svg.upper.image(LINER.settings.RESOURCE_ROOT+'treble_clef.png').size(tcf,tcf).center(LINER.settings.clef_x_offset,LINER.y_conversion(3));
 		
 		elem.svg.upper.tails=elem.svg.upper.nested();
@@ -185,7 +185,7 @@ LINER={
 			elem.svg.lower.line(x,low,x,high).stroke('grey');
 		}
 		
-		elem.newnote=function(duration){//fudian?
+		elem.newnote=function(duration){
 			var src;
 			switch(duration){
 				case 1://eighth/quaver
@@ -200,6 +200,7 @@ LINER={
 			img.size(LINER.settings.scoresize,LINER.settings.scoresize);
 			img.scoredata={duration:duration,cx:0,cy:0};
 			if(duration==1)img.stroke('red');
+			//todo: style  cursor drags
 			return img;
 		}
 		elem.newrest=function(duration){
