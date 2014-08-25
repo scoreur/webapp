@@ -258,14 +258,14 @@ LINER={
 						mysc.svgelem.scoredata.cy+y
 					);
 					
-					liner.update_tail(mysc);
+					elem.liner.update_tail(mysc);
 					
-					liner.update_additional_line(mysc.lastx);
-					liner.update_additional_line(time);
+					elem.liner.update_additional_line(mysc.lastx);
+					elem.liner.update_additional_line(time);
 					mysc.lastx=time;
 					
 					
-					liner.update_rest(time);
+					elem.liner.update_rest(time);
 					
 					mysc._svgelem.remove();
 					mysc.svgelem.parent.add(mysc._svgelem);
