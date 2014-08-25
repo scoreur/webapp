@@ -1,6 +1,6 @@
 window.WAVEFORM={
 	piano:[1,0.5,0.3,0.08,0,0,0,0,0.04],
-	smule:[1,0.5],
+	smule:[1],
 	sine:[1]
 }
 MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
@@ -11,7 +11,7 @@ MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
 			var data=[];
 			var mp3codec=Lame.init();
 			Lame.set_in_samplerate(mp3codec,sampleps);
-			Lame.set_out_samplerate(mp3codec,22050);
+			Lame.set_out_samplerate(mp3codec,44100/2);
 			Lame.set_num_channels(mp3codec,2);
 			Lame.set_mode(mp3codec,Lame.JOINT_STEREO);
 			//Lame.set_num_channels(mp3codec,1);
@@ -414,13 +414,15 @@ WAVGEN_NEW={
 		var single_note=[];
 		var players=[];
 		var context=this.ctx;
+		var buffer_samplerate=this.sampleps;
 		var q=new QUEUE(function(){
 			for(var i=0;i<scores.length;i++)
 			{
 				var hz=scores[i][2],duration=unit_time*scores[i][1],start=unit_time*scores[i][0];
 				var kwd=hz+'hz,'+Math.floor(duration*1e6)+'us';
-				
 				var playerNode = context.createBufferSource();
+				playerNode.playbackRate.value=context.sampleRate/buffer_samplerate;
+				playerNode.channelCount=1;
 				playerNode.buffer = buffers[kwd];
 				playerNode.delay=start;
 				playerNode.connect(context.destination); 
@@ -428,7 +430,12 @@ WAVGEN_NEW={
 			}
 			var player=function(){
 				for(var i=0;i<players.length;i++)
-					players[i].start(context.currentTime+players[i].delay);
+				{
+					var tp=players[i];tp.i=i;
+					tp.start(context.currentTime+tp.delay);
+					tp.onended=function(){delete players[i];delete tp;}
+					
+				}
 			}
 			callback(player);
 		});
