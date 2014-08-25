@@ -52,6 +52,7 @@ window.myapp=(function(window,document){
 				throw(e);
 			}
 			$('#data').value='';
+			$('#data').style.display='none';
 			APP.parseData.apply(APP,[data]);
 		},
 		exportData:function(){
@@ -63,10 +64,19 @@ window.myapp=(function(window,document){
 					return [s.time*3,s.duration*3,WAVPLAY.frnum2hz(s.frnum)];
 				});
 			}
-			return APP.current_data;
+			return data;
 		},
 		exportDataProc:function(){
 			$('#data').value=JSON.stringify(APP.exportData.apply(APP));
+			for(var i in APP.scorelines)
+			{
+				APP.scorelines[i].svg.clear();
+				APP.scorelines[i].innerHTMl='';
+				delete APP.scorelines[i];
+			}
+			$('#canvases').innerHTML='';
+			delete APP.current_data;
+			$('#data').style.display='block';
 		},
 		playData:function(data){
 			WAVGEN_NEW.PLAY(data);
@@ -97,7 +107,7 @@ window.addEventListener('load',myapp.initialize);
 		
 		</div>
 		
-		<textarea id="data">
+		<textarea id="data" style="width:90%;height:200px;">
 //example data
 {
 	time_unit:750,//(ms, 1 standard beat (48 score units), or approximately 1/4800 minute)
