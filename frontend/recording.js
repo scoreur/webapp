@@ -18,15 +18,14 @@ RECORDER={
 			console.log('gum ok',stream);
 		} ,function(error){
 			console.log(error);
-			alert('get user medai error!');
+			alert('get user media error!');
 		});
 	},
-	startRecording:function(){
+	startRecording:function(dataCallback){
 		this.processorNode.onaudioprocess=function(audioProcessingEvent){
-			console.log('recording evt:',ape=audioProcessingEvent);
 			var inputBuffer = audioProcessingEvent.inputBuffer;
 			var Data = inputBuffer.getChannelData(0);
-			document.body.innerHTML=real_cfft(Data).join("\n");
+			dataCallback(Data);
 		}
 		this.sourceNode.connect(this.processorNode);
 	},
