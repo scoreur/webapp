@@ -13,7 +13,7 @@ RECORDER={
 	this.processorNode=this.ctx.createScriptProcessor(blocksize);
 	this.processorNode.connect(this.ctx.destination);
 	var _this=this;
-		navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
+		navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 		navigator.getUserMedia( {audio:true}, function(stream){
 			_this.sourceNode = _this.ctx.createMediaStreamSource(stream);	
 			if(typeof callback=='function')callback();
