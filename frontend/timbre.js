@@ -26,7 +26,7 @@ function procMax(data){//unify&shift data
 	if(data[maxi]>0){
 		var nd=new Float32Array(data.length);
 		nd.set((data.slice || data.subarray).apply(data,[maxi]));
-		for(var i=0;i<data.length;i++)nd[i]/=data[maxi];
+		//for(var i=0;i<data.length;i++)nd[i]/=data[maxi];
 		return nd;
 	}
 	else return data;
@@ -44,7 +44,9 @@ function apply_normalization(col){
 
 function nn_test(fftdata){
 	var f512=(fftdata.slice || fftdata.subarray).apply(fftdata,[1,513]);
+	
 	f512=procMax(f512);
+	
 	f512=apply_normalization(f512);
 	
 	var f256=matmul(PCA,f512);
@@ -62,10 +64,10 @@ function nn_test(fftdata){
 
 function calc_timbre_name(fftdata){
 	var nnresult=nn_test(fftdata);
-	console.log('nn result:',nnresult,nnresult.length);
+	//console.log('nn result:',nnresult,nnresult.length);
 	var maxi=0;
 	for(var i in nnresult)
 		if(nnresult[i]>nnresult[maxi])maxi=i;
-		console.log('maxi:',maxi,nnresult[maxi],timbre_list[maxi]);
-	return timbre_list[maxi];
+		//console.log('maxi:',maxi,nnresult[maxi],timbre_list[maxi]);
+	return [timbre_list[maxi],nnresult[maxi]];
 }
