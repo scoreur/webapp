@@ -19,12 +19,17 @@ function sigmoid_col(x){
 	return x;
 }
 
-function unify_col(col)
-{
-	var max=0;
-	for(var i in col)if(col[i]>max)max=col[i];
-	if(max>0)for(var i in col)col[i]/=max;
-	return col;
+function procMax(data){//unify&shift data
+	var maxi=0;
+	for(var i=0;i<data.length;i++)
+		if(data[maxi]<data[i])maxi=i;
+	if(data[maxi]>0){
+		var nd=new Float32Array(data.length);
+		nd.set((data.slice || data.subarray).apply(data,[maxi]));
+		for(var i=0;i<data.length;i++)nd[i]/=data[maxi];
+		return nd;
+	}
+	else return data;
 }
 
 function apply_normalization(col){
@@ -37,14 +42,18 @@ function apply_normalization(col){
 	return col;
 }
 
-function feedforward(fftdata){
-	var a1=new Float32Array(513+1);
+function nn_test(fftdata){
+	var f512=(fftdata.slice || fftdata.subarray).apply(fftdata,[1,513]);
+	f512=procMax(f512);
+	f512=apply_normalization(f512);
+	
+	var f256=matmul(PCA,f512);
+	
+	var a1=new Float32Array(256+1);
 	a1[0]=1;
-	var newcol=unify_col(fftdata);
-	var norcol=apply_normalization(newcol);
-	a1.subarray(1).set(norcol);
+	a1.subarray(1).set(f256);
 	var z2=matmul(theta_1,a1);
-	var a2=new Float32Array(40+1);
+	var a2=new Float32Array(80+1);
 	a2[0]=1;
 	a2.subarray(1).set(sigmoid_col(z2));
 	var z3=matmul(theta_2,a2);
@@ -52,7 +61,7 @@ function feedforward(fftdata){
 }
 
 function calc_timbre_name(fftdata){
-	var nnresult=feedforward(fftdata);
+	var nnresult=nn_test(fftdata);
 	console.log('nn result:',nnresult,nnresult.length);
 	var maxi=0;
 	for(var i in nnresult)
