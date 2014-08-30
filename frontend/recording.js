@@ -7,8 +7,10 @@ RECORDER={
 	})(),
 	sourceNode:null,
 	processorNode:null,
-	initialize:function(callback){
-	this.processorNode=this.ctx.createScriptProcessor(1024);
+	initialize:function(callback,blocksize){
+	blocksize=1 << Math.floor(Math.log(blocksize)/Math.LN2);
+	if(!(blocksize>=128))blocksize=1024;
+	this.processorNode=this.ctx.createScriptProcessor(blocksize);
 	this.processorNode.connect(this.ctx.destination);
 	var _this=this;
 		navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
