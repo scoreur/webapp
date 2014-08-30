@@ -1,8 +1,8 @@
 RECORDER={
-	sampleps:48000,
+	sampleps:0,
 	ctx:(function(){
 		var ctx=new (window.AudioContext || window.webkitAudioContext)();
-		ctx.sampleRate=this.sampleps;
+		this.sampleps=ctx.sampleRate;
 		return ctx;
 	})(),
 	sourceNode:null,
@@ -25,7 +25,9 @@ RECORDER={
 		this.processorNode.onaudioprocess=function(audioProcessingEvent){
 			var inputBuffer = audioProcessingEvent.inputBuffer;
 			var Data = inputBuffer.getChannelData(0);
-			dataCallback(Data);
+			var d2;
+			if(inputBuffer.numberOfChannels==2)d2=inputBuffer.getChannelData(1);
+			dataCallback(Data,d2);
 		}
 		this.sourceNode.connect(this.processorNode);
 	},
