@@ -4,7 +4,7 @@ LINER={
 		lineheight:12,
 		scorewidth:22+6,
 		scoresize:16,
-		tailsize:20,
+		tailsize:12*3,//tail length 3.5 lines, tail img should fill between score head and tail end; hence 3*line_height.
 		beatsperseq:8,
 		seqperline:6,
 		top_line:8,
