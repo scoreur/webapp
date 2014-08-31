@@ -186,6 +186,20 @@ LINER={
 		elem.onmousedown=LINER.mouse_handlers.global_down;
 		elem.onmouseup=LINER.mouse_handlers.global_up;
 		
+		elem.svg.upper.rect(lineend,LINER.settings.lineheight*5).center(lineend/2,LINER.y_conversion(-3)).opacity(0);
+		elem.svg.upper.node.onmouseup=function(e){
+			var c=LINER.SVG_transxy(elem.svg.upper.node,e.clientX,e.clientY);
+			var x=LINER.inverse_x_conversion(c[0]),y=LINER.inverse_y_conversion(c[1]);
+			if(x>=0&& x< LINER.settings.beatsperseq*LINER.settings.seqperline){
+				if(elem.svg.upper.occupation_cache[x])return;
+				elem.liner.addscore({
+					time:x,
+					duration:1,
+					frnum:LINER.inverse_line_conversion(y)
+				});
+			}
+		}
+		
 		elem.svg.lower.rect(lineend,LINER.settings.lineheight*5).center(lineend/2,LINER.y_conversion(-3)).opacity(0);
 		elem.svg.lower.node.onmouseup=function(e){
 			var c=LINER.SVG_transxy(elem.svg.lower.node,e.clientX,e.clientY);
