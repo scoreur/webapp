@@ -191,7 +191,7 @@ LINER={
 			var c=LINER.SVG_transxy(elem.svg.lower.node,e.clientX,e.clientY);
 			var x=LINER.inverse_x_conversion(c[0]),y=LINER.inverse_y_conversion(c[1]);
 			if(x>=0&& x< LINER.settings.beatsperseq*LINER.settings.seqperline){
-				//if()return;//todo: occupied
+				if(elem.svg.lower.occupation_cache[x])return;
 				elem.liner.addscore({
 					time:x,
 					duration:1,
@@ -428,6 +428,8 @@ LINER={
 							occupied_lower[s.time+i]=true;
 					}
 				});
+				elem.svg.upper.occupation_cache=occupied_upper;
+				elem.svg.lower.occupation_cache=occupied_lower;
 			
 	
 				function none(arr,s,e){
