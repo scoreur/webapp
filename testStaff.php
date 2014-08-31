@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+	<head>
+		<script src="./backend/lib/libmp3lame.js"></script>
+		<script src="./backend/lib/queue.js"></script>
+		<script src="./backend/lib/filesaver.js"></script>
+		<script src="./backend/func.js"></script>
+		<script src="./frontend/lib/svg.js"></script>
+		<script src="./frontend/draw.js"></script>
+		<script>
+window.$=function(){return document.querySelector.apply(document,arguments);}
+window.$$=function(){return document.querySelectorAll.apply(document,arguments);}
+window.myapp=(function(window,document){
+	var APP={
+		settings:{
+			scoreline_height:250
+		},
+		current_data:{},
+		scorelines:[],
+		parseData:function(data){
+			APP.current_data=data;
+			for(var i in data.chorus){
+				var p=document.createElement('p');
+				p.innerText=data.chorus[i][0];
+				$('#canvases').appendChild(p);
+				var el=document.createElement('div');
+				el.style.height=APP.settings.scoreline_height+'px';
+				$('#canvases').appendChild(el);
+				APP.scorelines[i]=el;
+				
+				var scoredata=data.chorus[i][1].map(function(s){
+					return {
+						time:Math.round(s[0]/3),
+						duration:Math.round(s[1]/3),
+						frnum:WAVPLAY.hz2frnum(s[2])
+					}
+				});
+				
+				LINER.initialize(el,{RESOURCE_ROOT:'frontend/resources/staff/',WAVEFORM:data.chorus[i][2]});
+				el.liner.addscores(scoredata);
+			}
+		},
+		parseDataProc:function(){
+			var data=$('#data').value;
+			try{
+				//data=JSON.parse(data);
+				data=eval.apply({},['tmp='+data]);
+			}
+			catch(e){
+				console.log(e);
+				alert('Data parse error');
+				throw(e);
+			}
+			$('#data').value='';
+			$('#data').style.display='none';
+			APP.parseData.apply(APP,[data]);
+		},
+		exportData:function(){
+			//fetch new data from scores
+			var data=APP.current_data;
+			for(var i in data.chorus){
+				var el=APP.scorelines[i];
+				data.chorus[i][1]=el.scores.map(function(s){
+					return [s.time*3,s.duration*3,Math.floor(WAVPLAY.frnum2hz(s.frnum)*100)/100];
+				});
+			}
+			return data;
+		},
+		exportDataProc:function(){
+			$('#data').value=JSON.stringify(APP.exportData.apply(APP));
+			for(var i in APP.scorelines)
+			{
+				APP.scorelines[i].svg.clear();
+				APP.scorelines[i].innerHTMl='';
+				delete APP.scorelines[i];
+			}
+			$('#canvases').innerHTML='';
+			delete APP.current_data;
+			$('#data').style.display='block';
+		},
+		playData:function(data){
+			WAVGEN_NEW.PLAY(data);
+		},
+		playDataProc:function(){
+			//data cleanup? formatting?
+			APP.exportData.apply(APP);
+			APP.playData.apply(APP,[APP.current_data]);
+		},
+		initialize:function(){
+			$('#btn_parse').addEventListener('click',APP.parseDataProc);
+			$('#btn_play').addEventListener('click',APP.playDataProc);
+			$('#btn_export').addEventListener('click',APP.exportDataProc);
+		}
+	};
+	return APP;
+})(window,document);
+window.addEventListener('load',myapp.initialize);
+		</script>
+	</head>
+	<body>
+		<div id="controller">
+			<button id="btn_parse">Parse Data</button>
+			<button id="btn_play">Play</button>
+			<button id="btn_export">Export Data</button>
+		</div>
+		<div id="canvases">
+		
+		</div>
+		
+		<textarea id="data" style="width:90%;height:200px;">
+//example data
+{
+	"time_unit":750,	//(ms, 1 standard beat (48 score units), or approximately 1/4800 minute)
+	"chorus":[
+		[
+			"piano",
+			[[0,12,440],[12,12,880],[24,24,739.98],[96,12,261.62],[108,12,261.62],[120,12,391.99],[132,12,391.99],[144,12,440],[156,12,440],[168,18,391.99],[192,12,349.22],[204,12,349.22],[216,12,329.62],[228,12,329.62],[240,12,293.66],[252,12,293.66],[264,18,261.62],[288,12,391.99],[300,12,391.99],[312,12,349.22],[324,12,349.22],[336,12,329.62],[348,12,329.62],[360,18,293.66],[384,12,391.99],[396,12,391.99],[408,12,349.22],[420,12,349.22],[432,12,329.62],[444,12,329.62],[456,18,293.66],[480,12,261.62],[492,12,261.62],[504,12,391.99],[516,12,391.99],[528,12,440],[540,12,440],[552,18,391.99],[576,12,349.22],[588,12,349.22],[600,12,329.62],[612,12,329.62],[624,12,293.66],[636,12,293.66],[648,24,261.62]],  //scores
+			[1,0.1,-0.3,0,0,-0.2] //waveform
+		],
+		[
+			"brilliant_smule",
+			[[30,12,440],[30,42,739.98],[36,12,880],[576,12,440],[588,12,440],[600,12,415.3],[612,12,415.3],[624,12,369.99],[636,12,369.99],[648,24,329.62],[576,12,523.25],[588,12,523.25],[600,12,493.88],[612,12,493.88],[624,12,440],[636,12,440],[648,24,391.99]],
+			[1,0,0,0.4,0,0,0,0,0.1]
+		]
+	]
+}
+		</textarea>
+	
+	</body>
+</html>
