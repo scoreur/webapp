@@ -331,6 +331,7 @@ WAVGEN_NEW={
 	})(),
 	generateSingleScore:function(amplitude,freq,second,callback){
 		if(typeof callback!='function')throw this.nocallback;
+		if(!(second>0))return;
 		var pack=this.pack;
 		var octx=new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1,this.sampleps*second,this.sampleps);
 		var g=octx.createGain();
@@ -354,6 +355,7 @@ WAVGEN_NEW={
 	},
 	generateSingleScore_waveform:function(amplitude,freq,second,waveform,callback){
 		if(typeof callback!='function')throw this.nocallback;
+		if(!(second>0))return;
 		if(!waveform || waveform.length<=1)waveform=[1];
 		var buffers=[];
 		var q=new QUEUE(function(){
@@ -501,6 +503,7 @@ WAVGEN_NEW={
 					max_time=s[0]+s[1];
 			});
 		}
+		if(!(max_time>0))return callback([]);
 		console.log('creating octx:',1,this.sampleps*unit_ms/1000*max_time,this.sampleps);
 		var octx=new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1,this.sampleps*unit_ms/1000*max_time,this.sampleps);
 		this._lctx=this.ctx;
