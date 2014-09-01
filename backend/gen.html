@@ -1,0 +1,28 @@
+<!doctype>
+<html>
+	<head>
+		<script src="func.js"></script>
+		<script src="lib/queue.js"></script>
+		<script>
+		window.onload=function(){
+			var str=location.hash;
+			var arr=str.substr(1).split(',').map(function(n){return 1*n;});
+			 data={
+				time_unit:750,
+				chorus:[
+					[
+						"sin",
+						arr.map(function(item,idx){return [idx*24,24,WAVPLAY.frnum2hz(item)];}),
+						[1]
+					]
+				]
+			}
+			WAVGEN_NEW.PLAY(data);
+		}
+		</script>
+	</head>
+	<body>
+		<div id="data">
+		</div>
+	</body>
+</html>
