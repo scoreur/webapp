@@ -73,7 +73,7 @@
 					typ='unknown';
 					var src='image/'+typ+'.jpg';
 					svg.image(src).center(100,100).opacity(0.3);
-					svg.text('--').size(50).center(200,300);
+					svg.text('--').size(100).center(0,0);
 					return;
 				}
 				/*
@@ -126,7 +126,7 @@
 				if(res[1]<0.75)typ='unknown';
 				var src='image/'+typ+'.jpg';
 				svg.image(src).center(100,100).opacity(res[1]<0.75? 0.5:1);
-				svg.text(hz2cname(hz)).size(50).center(200,300);
+				svg.text(hz2cname(hz)).size(100).center(0,0);
 			});
 			
 			setTimeout(function(){
