@@ -1,0 +1,133 @@
+<!doctype>
+<html>
+	<head>
+		<!--<script src="lib/libvorbis.js"></script>-->
+		<script src="../frontend/lib/fft.js"></script>
+		<script src="../frontend/lib/svg.js"></script>
+		<script src="../frontend/recording.js"></script>
+		<script src="../frontend/timbre_data.js"></script>
+		<script src="../frontend/timbre.js"></script>
+		<script>
+		function hz2cname(hz)
+		{
+			
+			var frnum=12*(Math.log(hz/440)/Math.LN2);
+			frnum=48+Math.round(frnum);
+			frnum%=12;
+			return ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][frnum];
+		}
+		function self_cor(data)
+		{
+			
+			var m=-1,mv=-1e8,l=data.length;
+			var ret=new Float32Array(l/2);
+			for(var i=0;i<l/2;i++)
+			{
+				var tv=0;
+				for(var j=0;j<l;j++)
+				{
+					tv+=data[j]*data[(j+i)%l];
+				}
+				/*if(m<0)
+				{
+					if(tv<0)
+					{
+						m=i;mv=tv;
+					}
+				}
+				else*/
+				if(tv>mv)
+				{
+					mv=tv;m=i;
+				}
+				ret[i]=tv;
+			}
+			console.log('max sc:',m,mv,48000/m);
+			return ret;
+		}
+		
+		var lastAnal=0,delay=300;
+		RECORDER.initialize(function(){
+			RECORDER.startRecording(function(data){
+				var startAnal;
+				if(Date.now()<lastAnal+delay)return;
+				else {startAnal=Date.now();}
+				
+				lastAnal=Date.now();
+				
+				//console.log('start analysis:',Date.now());		
+				var fftresult=real_cfft(data.subarray(0,1024));
+				
+				//var scresult=real_icfft(fftresult);
+				var scresult=self_cor(data);
+				
+				//console.log(lsc=scresult);
+				//console.log(lda=data);
+				
+				var max=0;
+				for(var i=1;i<100;i++)if(max<fftresult[i])max=fftresult[i];
+				if(max<0.1){
+					console.log('quiet');
+					document.body.innerHTML='--';
+					return;
+				}
+				/*
+				var p_idx=2;
+				for(var i=2;i<512;i++)
+				if(scresult[i]>scresult[p_idx])
+					p_idx=i;
+				*/
+				var p_idx=-1;
+				/*
+				for(var i=2;i<1024;i++)
+				{
+					if(p_idx<0 && scresult[i]<0)
+						p_idx=i;
+					if(p_idx>0 && scresult[i]>scresult[p_idx])
+						p_idx=i;
+				}*/
+				while(++i<1023)if(scresult[i]<0)break;
+				p_idx=i;
+				while(++i<1023)if(scresult[i]>scresult[p_idx])p_idx=i;
+				
+				
+				var fftdata;
+				if(fftresult.slice)fftdata=fftresult.slice(0,513);
+				else fftdata=fftresult.subarray(0,513);
+				//console.log('fft:',Date.now());
+				//console.log(lfd=fftdata);
+				var res=calc_timbre_name(fftdata);
+				//console.log('nn:',Date.now());
+				lastAnal=Date.now();
+				//console.log('total time:',lastAnal-startAnal);
+				console.log('res:',res);
+				document.body.innerHTML=res[1]>0.8?res[0]:'??';
+				
+				document.body.innerHTML+='<br>';
+				var hz=48000/p_idx;
+				document.body.innerHTML+=p_idx+' '+Math.floor(hz)+'hz';
+				document.body.innerHTML+='<br>';
+				document.body.innerHTML+=hz2cname(hz);
+			/*	
+			svg=SVG(document.body);
+				//svg.clear();
+				for(var i=0;i<1024;i++)
+					svg.circle(5).center(.1*scresult[i]+200,i/2).fill('red');
+				for(var i=0;i<1024;i++)
+					svg.circle(5).center(50*data[i]+400,i/2).fill('blue');
+			*/	
+			});
+			
+			setTimeout(function(){
+				RECORDER.endRecording();
+			},200*1e3);
+		},4096);
+		
+		//playFile();
+		//WAVGEN_NEW.generateScoreSequencePlayer(100,mydata.chorus[0][1],[1,0.1,0.2],function(pla){p=pla;})
+		</script>
+	</head>
+	<body>
+	
+	</body>
+</html>
