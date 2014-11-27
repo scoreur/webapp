@@ -70,6 +70,16 @@ function real_cfft(array)
 	//rret.set(ret);
 	return ret;
 }
+
+function real_icfft(array)
+{
+	var data=new Array(array.length);
+	for(var i=0;i<array.length;i++)data[i]=array[i];
+	var ret=icfft(data).map(function(complex){return complex.modular()});
+	//var rret=new Float32Array(array.length);
+	//rret.set(ret);
+	return ret;
+}
  
 /*
 basic complex number arithmetic from 
