@@ -14,7 +14,7 @@
 			var frnum=12*(Math.log(hz/440)/Math.LN2);
 			frnum=48+Math.round(frnum);
 			frnum%=12;
-			return ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][frnum];
+			return ['A','A#','B','C','C#','D','D#','E','F','F#','G','G#'][frnum];
 		}
 		function self_cor(data)
 		{
@@ -128,10 +128,10 @@
 				svg.image(src).center(100,100).opacity(res[1]<0.75? 0.5:1);
 				svg.text(hz2cname(hz)).size(100).center(50,50);
 			});
-			
+			/*
 			setTimeout(function(){
 				RECORDER.endRecording();
-			},200*1e3);
+			},200*1e3);*/
 		},4096);
 		
 		//playFile();
