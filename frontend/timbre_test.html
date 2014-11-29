@@ -1,0 +1,55 @@
+<!doctype>
+<html>
+	<head>
+		<!--<script src="lib/libvorbis.js"></script>-->
+		<script src="../frontend/lib/fft.js"></script>
+		<script src="../frontend/recording.js"></script>
+		<script src="../frontend/timbre_data.js"></script>
+		<script src="../frontend/timbre.js"></script>
+		<script>
+		var lastAnal=0,delay=200;
+		RECORDER.initialize(function(){
+			RECORDER.startRecording(function(data){
+				var startAnal;
+				if(Date.now()<lastAnal+delay)return;
+				else {startAnal=Date.now();}
+				
+				lastAnal=Date.now();
+				
+				//console.log('start analysis:',Date.now());		
+				var fftresult=real_cfft(data);
+				
+				var max=0;
+				for(var i=1;i<100;i++)if(max<fftresult[i])max=fftresult[i];
+				if(max<0.1){
+					console.log('quiet');
+					document.body.innerHTML='--';
+					return;
+				}
+				
+				var fftdata;
+				if(fftresult.slice)fftdata=fftresult.slice(0,513);
+				else fftdata=fftresult.subarray(0,513);
+				//console.log('fft:',Date.now());
+				//console.log(lfd=fftdata);
+				var res=calc_timbre_name(fftdata);
+				//console.log('nn:',Date.now());
+				lastAnal=Date.now();
+				//console.log('total time:',lastAnal-startAnal);
+				console.log('res:',res);
+				document.body.innerHTML=res[1]>0.8?res[0]:'??';
+			});
+			
+			setTimeout(function(){
+				RECORDER.endRecording();
+			},200*1e3);
+		});
+		
+		//playFile();
+		//WAVGEN_NEW.generateScoreSequencePlayer(100,mydata.chorus[0][1],[1,0.1,0.2],function(pla){p=pla;})
+		</script>
+	</head>
+	<body>
+	
+	</body>
+</html>

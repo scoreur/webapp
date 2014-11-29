@@ -1,12 +1,12 @@
 MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
 	float32tomp3:function(buff,sampleps)
 		{
-			if(!sampleps)sampleps=44100;
+			if(!sampleps)sampleps=48000;
 			console.log('encoding mp3 sps:',sampleps,' time:',buff.length/sampleps);
 			var data=[];
 			var mp3codec=Lame.init();
 			Lame.set_in_samplerate(mp3codec,sampleps);
-			Lame.set_out_samplerate(mp3codec,44100/2);
+			Lame.set_out_samplerate(mp3codec,48000/2);
 			Lame.set_num_channels(mp3codec,2);
 			Lame.set_mode(mp3codec,Lame.JOINT_STEREO);
 			//Lame.set_num_channels(mp3codec,1);
@@ -56,7 +56,7 @@ MP3ENCODE={//A simple wrapper class for synchronously invoking libmp3lame.js
 
 WAVGEN={
 	use_callback:"WARNING: a callback function is detected and data has been forwarded.",
-	sampleps:44100,
+	sampleps:48000,
 	wavSize:16,//2 bytes per sample
 	amplitude:20000,
 	frnum2hz:function(frnum){
@@ -102,7 +102,7 @@ WAVGEN={
 	writeRIFFHeader:function(buffer){
 		var headdv=new DataView(buffer);
 		var contentlength=buffer.byteLength-44;
-		var riff_header="52494646FFFFFFFF57415645666D7420100000000100010044AC000010B102000200100064617461FFFFFFFF".match(/../g).map(function(s){return parseInt(s,16);});
+		var riff_header="52494646FFFFFFFF57415645666D7420100000000100010080BB0000007701000200100064617461FFFFFFFF".match(/../g).map(function(s){return parseInt(s,16);});
 		for(var i=0;i<44;i++)
 			headdv.setUint8(i,riff_header[i]);
 		headdv.setUint32(40,contentlength,true);
@@ -307,7 +307,7 @@ WAVGEN={
 	}
 }
 WAVGEN_NEW={
-	sampleps:44100,
+	sampleps:48000,
 	amplitude:1,
 	wav_amplitude:3000,
 	warning:"WARNING: YOU SHOULD NOT SEE THIS.\nThis function is asynchronous, please use a callback function to obtain the returning data.",
@@ -409,6 +409,7 @@ WAVGEN_NEW={
 				var kwd=hz+'hz,'+Math.floor(duration*1e6)+'us';
 				var playerNode = context.createBufferSource();
 				playerNode.playbackRate.value=context.sampleRate/buffer_samplerate;
+				console.log('calculated pbR:',playerNode.playbackRate.value,context.sampleRate,buffer_samplerate);
 				playerNode.channelCount=1;
 				playerNode.buffer = buffers[kwd];
 				playerNode.delay=start;
@@ -471,7 +472,7 @@ WAVGEN_NEW={
 	writeRIFFHeader:function(buffer){
 		var headdv=new DataView(buffer);
 		var contentlength=buffer.byteLength-44;
-		var riff_header="52494646FFFFFFFF57415645666D7420100000000100010044AC000010B102000200100064617461FFFFFFFF".match(/../g).map(function(s){return parseInt(s,16);});
+		var riff_header="52494646FFFFFFFF57415645666D7420100000000100010080BB0000007701000200100064617461FFFFFFFF".match(/../g).map(function(s){return parseInt(s,16);});
 		for(var i=0;i<44;i++)
 			headdv.setUint8(i,riff_header[i]);
 		headdv.setUint32(40,contentlength,true);
@@ -495,7 +496,7 @@ WAVGEN_NEW={
 	saveScoreSequences_rawbufferF32:function(unit_ms,chorus,callback){
 		if(typeof callback!='function')throw this.nocallback;
 		var max_time=0;
-		for(var i in data.chorus)
+		for(var i in chorus)
 		{
 			var scores=chorus[i][1];
 			scores.map(function(s){
@@ -503,8 +504,8 @@ WAVGEN_NEW={
 					max_time=s[0]+s[1];
 			});
 		}
-		if(!(max_time>0))return callback([]);
-		console.log('creating octx:',1,this.sampleps*unit_ms/1000*max_time,this.sampleps);
+//		if(!(max_time>0))return callback([]);
+		console.log('maxtime:',max_time,max_time*unit_ms,'creating octx:',1,this.sampleps*unit_ms/1000*max_time,this.sampleps);
 		var octx=new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1,this.sampleps*unit_ms/1000*max_time,this.sampleps);
 		this._lctx=this.ctx;
 		this.ctx=octx;

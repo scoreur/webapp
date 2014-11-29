@@ -15,7 +15,7 @@ window.myapp=(function(window,document){
 		settings:{
 			scoreline_height:250
 		},
-		current_data:{},
+		current_data:false,
 		scorelines:[],
 		parseData:function(data){
 			APP.current_data=data;
@@ -86,10 +86,23 @@ window.myapp=(function(window,document){
 			APP.exportData.apply(APP);
 			APP.playData.apply(APP,[APP.current_data]);
 		},
+		saveWAVProc:function(){
+			APP.exportData.apply(APP);
+			WAVGEN_NEW.SAVE_WAV(APP.current_data,'save');
+		},
+		saveSTAFFProc:function(){
+			var data=APP.exportData.apply(APP);
+			if(data)
+				saveAs(new Blob([JSON.stringify(data)]),'staff.json');
+			else
+				alert('No data available');
+		},
 		initialize:function(){
 			$('#btn_parse').addEventListener('click',APP.parseDataProc);
 			$('#btn_play').addEventListener('click',APP.playDataProc);
 			$('#btn_export').addEventListener('click',APP.exportDataProc);
+			$('#btn_saveWAV').addEventListener('click',APP.saveWAVProc);
+			$('#btn_saveSTAFF').addEventListener('click',APP.saveSTAFFProc);
 		}
 	};
 	return APP;
@@ -101,6 +114,8 @@ window.addEventListener('load',myapp.initialize);
 		<div id="controller">
 			<button id="btn_parse">Parse Data</button>
 			<button id="btn_play">Play</button>
+			<button id="btn_saveWAV">Save(to wav)</button>
+			<button id="btn_saveSTAFF">Save staff</button>
 			<button id="btn_export">Export Data</button>
 		</div>
 		<div id="canvases">
