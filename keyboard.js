@@ -79,7 +79,8 @@ function envelopeFlute(d){
 }
 function keysound(frnum, tlen){
 	var sampleps = 44100;
-	var riff_header = [82, 73, 70, 70,      // 'RIFF'
+	var riff_header = [
+	      82, 73, 70, 70,      // 'RIFF'
           255, 255, 255, 255,  // dataSize+36
           87, 65, 86, 69,      // 'WAVE'
           102, 109, 116, 32,   // 'fmt '
@@ -88,7 +89,7 @@ function keysound(frnum, tlen){
           68, 172, 0, 0,       // sampleps:44100=68+172*256
           16, 177, 2, 0,       // Bps(BytesPerSecond)=sampleps*blockAlign
           2, 0, 16, 0,         // BlockAlign, bpsample
-          100, 97, 116, 97,    // Bpsample
+          100, 97, 116, 97,    // 'data'
           255, 255, 255, 255];
 		  
 	var freq = 2*Math.PI*keyfreq(frnum)/sampleps;
